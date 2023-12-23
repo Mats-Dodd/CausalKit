@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from src.linreg import LinReg
+from src.models.linreg import LinReg
 
 np.random.seed(69)
 independent_values = np.random.normal(0, 3, 1000)
