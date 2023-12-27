@@ -23,13 +23,16 @@ class LinReg:
         self.standard_error_type = standard_error_type
         self.regressors = independent
         self.num_regressors = len(independent)
-        self.observation = len(self.data)
-        self.degrees_of_freedom = self.observation - self.num_regressors - 1
+        self.observations = len(self.data)
+        self.degrees_of_freedom = self.observations - self.num_regressors - (1 if self.intercept else 0)
         self.coefficients = None
+        self.rss = None
         self.standard_errors = None
         self.t_stats = None
         self.p_values = None
         self.conf_int = None
+        self.summary_data = None
+        self.table = None
 
         self._fit()
 
@@ -46,10 +49,13 @@ class LinReg:
     def _fit(self):
         self._add_intercept()
         self._fit_coefficients()
+        self._residual_sum_of_squares()
         self._fit_standard_errors()
         self._fit_t_statistic()
         self._fit_p_values()
         self._fit_conf_int()
+        self.set_summary_data()
+        self.set_table()
 
     def predict(self, new_independent):
 
@@ -71,10 +77,15 @@ class LinReg:
 
         return self.data[self.outcome] - self.fitted_values()
 
+    def _residual_sum_of_squares(self):
+        self.rss = np.sum(self.residuals() ** 2)
+
     def _fit_standard_errors(self):
+        error_variance = self.rss / self.degrees_of_freedom
+        xtx_inv = np.linalg.inv(self.independent.T @ self.independent)
 
         if self.standard_error_type == 'non-robust':
-            self.standard_errors = np.sqrt(np.diag(np.linalg.inv(self.independent.T @ self.independent)))
+            self.standard_errors = np.sqrt(np.diag(xtx_inv * error_variance))
 
         elif self.standard_error_type == 'robust':
             return np.sqrt(np.diag(np.linalg.inv(self.independent.T @ self.independent) @ self.independent.T @ np.diag(self.residuals() ** 2) @ self.independent))
@@ -97,17 +108,27 @@ class LinReg:
         upper_bounds = self.coefficients + CRITICAL * self.standard_errors
         self.conf_int = [[lower, upper] for lower, upper in zip(lower_bounds, upper_bounds)]
 
-    def summary(self, content_type='dynamic'):
-
-        summary_data = {
+    def set_summary_data(self):
+        self.summary_data = {
             'Variable': ['Intercept'] + self.regressors,
             'Coefficient': [round(num, 3) for num in self.coefficients],
             'Std-Error': [round(num, 3) for num in self.standard_errors],
             'T-Statistic': [round(num, 3) for num in self.t_stats],
             'P>|t|': [round(num, 3) for num in self.p_values],
             'Conf. Interval': [[round(num, 3) for num in sublist] for sublist in self.conf_int]
-
         }
+
+    def set_table(self):
+        data = self.summary_data.copy()
+        data['Lower Bound'] = [ci[0] for ci in data['Conf. Interval']]
+        data['Upper Bound'] = [ci[1] for ci in data['Conf. Interval']]
+        del data['Conf. Interval']
+
+        self.table = pd.DataFrame(data)
+
+    def summary(self, content_type='dynamic'):
+
+        summary_data = self.summary_data
 
         header_tooltips = {
             'Variable': '''
