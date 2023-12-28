@@ -24,11 +24,13 @@ class LinReg:
         self.n_regs = len(independent)
         self.obs = len(self.data)
         self.degrees_of_freedom = self.obs - self.n_regs - (1 if self.intercept else 0)
+        self.k = self.n_regs + (1 if self.intercept else 0)
         self.coefficients = None
         self.rss = None
         self.tss = None
         self.r_squared = None
         self.adj_r_squared = None
+        self.log_likelihood = None
         self.aic = None
         self.bic = None
         self.adj_aic = None
@@ -66,6 +68,7 @@ class LinReg:
         self._total_sum_of_squares()
         self._r_squared()
         self._adjusted_r_squared()
+        self._log_likelihood()
         self._aic()
         self._bic()
         self._adjusted_aic()
@@ -110,19 +113,20 @@ class LinReg:
     def _adjusted_r_squared(self):
         self.adj_r_squared = 1 - (1 - self.r_squared) * (self.obs - 1) / self.degrees_of_freedom
 
-    def _aic(self):
-        k = self.n_regs + (1 if self.intercept else 0)
+    def _log_likelihood(self):
         n = self.obs
         rss = self.rss
-        log_likelihood = -n/2 * np.log(2 * np.pi) - n/2 * np.log(rss / (n - k)) - rss / (2 * (rss / (n - k)))
-        self.aic = -2 * log_likelihood + 2 * k
+        k = self.k
+        self.log_likelihood = -n/2 * np.log(2 * np.pi) - n/2 * np.log(rss / (n - k)) - rss / (2 * (rss / (n - k)))
+
+    def _aic(self):
+        k = self.k
+        self.aic = -2 * self.log_likelihood + 2 * k
 
     def _bic(self):
         k = self.n_regs + (1 if self.intercept else 0)
         n = self.obs
-        rss = self.rss
-        log_likelihood = -n/2 * np.log(2 * np.pi) - n/2 * np.log(rss / (n - k)) - rss / (2 * (rss / (n - k)))
-        self.bic = -2 * log_likelihood + np.log(n) * k
+        self.bic = -2 * self.log_likelihood + np.log(n) * k
 
     def _adjusted_aic(self):
         self.adj_aic = self.aic + 2 * (self.n_regs + 1) * (self.n_regs + 2) / (self.obs - self.n_regs - 2)
