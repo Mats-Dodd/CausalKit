@@ -13,15 +13,16 @@ class LinReg:
     def __init__(self,
                  df: pd.DataFrame,
                  outcome: str,
-                 independent: [str],
+                 independent: list,
                  intercept: bool = True,
                  standard_error_type: str = ['non-robust', 'robust', 'clustered'][0]):
         self.data = df
         self.outcome = outcome
-        self.independent = independent
+        self.independent_vars = independent
+        self.independent_data = self.data[self.independent_vars].values
+        self.dependent_data = self.data[self.outcome].values
         self.intercept = intercept
         self.standard_error_type = standard_error_type
-        self.regressors = independent
         self.num_regressors = len(independent)
         self.observations = len(self.data)
         self.degrees_of_freedom = self.observations - self.num_regressors - (1 if self.intercept else 0)
@@ -36,18 +37,22 @@ class LinReg:
 
         self._fit()
 
-    def _add_intercept(self):
-
+    def _add_intercept(self, x):
         if self.intercept:
-            independent_cols = self.data[self.independent]
-            self.independent = np.c_[np.ones((len(independent_cols), 1)), independent_cols]
+
+            if x.ndim == 1:
+                x = x.reshape(-1, 1)
+            return np.c_[np.ones((x.shape[0], 1)), x]
+        return x
 
     def _fit_coefficients(self):
-        dep = self.data[self.outcome]
-        self.coefficients = np.linalg.inv(self.independent.T @ self.independent) @ self.independent.T @ dep
+        x = self.independent_data
+        x = self._add_intercept(x)
+        y = self.dependent_data
+
+        self.coefficients = np.linalg.lstsq(x, y, rcond=None)[0]
 
     def _fit(self):
-        self._add_intercept()
         self._fit_coefficients()
         self._residual_sum_of_squares()
         self._fit_standard_errors()
@@ -57,21 +62,19 @@ class LinReg:
         self.set_summary_data()
         self.set_table()
 
-    def predict(self, new_independent):
-
+    def predict(self, x_new):
+        if not isinstance(x_new, np.ndarray):
+            x_new = np.array([x_new])
         if self.intercept:
-            if type(new_independent) is int:
-                data = np.c_[np.ones((1, 1)), new_independent]
-            else:
-                data = np.c_[np.ones((len(new_independent), 1)), new_independent]
-        else:
-            data = new_independent
+            x_new = self._add_intercept(x_new)
 
-        return data @ self.coefficients
+        return x_new @ self.coefficients
 
     def fitted_values(self):
+        x = self.independent_data
+        x = self._add_intercept(x)
 
-        return self.independent @ self.coefficients
+        return x @ self.coefficients
 
     def residuals(self):
 
@@ -81,14 +84,18 @@ class LinReg:
         self.rss = np.sum(self.residuals() ** 2)
 
     def _fit_standard_errors(self):
+        x = self._add_intercept(self.independent_data)
         error_variance = self.rss / self.degrees_of_freedom
-        xtx_inv = np.linalg.inv(self.independent.T @ self.independent)
+        xtx_inv = np.linalg.pinv(x.T @ x)
 
         if self.standard_error_type == 'non-robust':
-            self.standard_errors = np.sqrt(np.diag(xtx_inv * error_variance))
+            self.standard_errors = np.sqrt(error_variance * np.diag(xtx_inv))
 
         elif self.standard_error_type == 'robust':
-            return np.sqrt(np.diag(np.linalg.inv(self.independent.T @ self.independent) @ self.independent.T @ np.diag(self.residuals() ** 2) @ self.independent))
+            residuals = self.residuals()
+            s = np.diag(residuals ** 2)
+            robust_variance = xtx_inv @ (x.T @ s @ x) @ xtx_inv
+            self.standard_errors = np.sqrt(np.diag(robust_variance))
 
         elif self.standard_error_type == 'clustered':
             """TODO: Implement clustered standard errors"""
@@ -110,7 +117,7 @@ class LinReg:
 
     def set_summary_data(self):
         self.summary_data = {
-            'Variable': ['Intercept'] + self.regressors,
+            'Variable': ['Intercept'] + self.independent_vars,
             'Coefficient': [round(num, 3) for num in self.coefficients],
             'Std-Error': [round(num, 3) for num in self.standard_errors],
             'T-Statistic': [round(num, 3) for num in self.t_stats],
