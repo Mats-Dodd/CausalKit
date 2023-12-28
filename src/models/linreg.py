@@ -3,8 +3,6 @@ import pandas as pd
 import scipy.stats as stats
 from IPython.display import display, HTML
 
-CRITICAL = 1.96
-
 
 class LinReg:
 
@@ -23,11 +21,20 @@ class LinReg:
         self.dependent_data = self.data[self.outcome].values
         self.intercept = intercept
         self.standard_error_type = standard_error_type
-        self.num_regressors = len(independent)
-        self.observations = len(self.data)
-        self.degrees_of_freedom = self.observations - self.num_regressors - (1 if self.intercept else 0)
+        self.n_regs = len(independent)
+        self.obs = len(self.data)
+        self.degrees_of_freedom = self.obs - self.n_regs - (1 if self.intercept else 0)
         self.coefficients = None
         self.rss = None
+        self.tss = None
+        self.r_squared = None
+        self.adj_r_squared = None
+        self.aic = None
+        self.bic = None
+        self.adj_aic = None
+        self.adj_bic = None
+        self.f_stat = None
+        self.f_stat_p_value = None
         self.standard_errors = None
         self.t_stats = None
         self.p_values = None
@@ -47,7 +54,8 @@ class LinReg:
 
     def _fit_coefficients(self):
         x = self.independent_data
-        x = self._add_intercept(x)
+        if self.intercept:
+            x = self._add_intercept(x)
         y = self.dependent_data
 
         self.coefficients = np.linalg.lstsq(x, y, rcond=None)[0]
@@ -55,6 +63,15 @@ class LinReg:
     def _fit(self):
         self._fit_coefficients()
         self._residual_sum_of_squares()
+        self._total_sum_of_squares()
+        self._r_squared()
+        self._adjusted_r_squared()
+        self._aic()
+        self._bic()
+        self._adjusted_aic()
+        self._adjusted_bic()
+        self.f_statistic()
+        self.f_statistic_p_value()
         self._fit_standard_errors()
         self._fit_t_statistic()
         self._fit_p_values()
@@ -72,7 +89,8 @@ class LinReg:
 
     def fitted_values(self):
         x = self.independent_data
-        x = self._add_intercept(x)
+        if self.intercept:
+            x = self._add_intercept(x)
 
         return x @ self.coefficients
 
@@ -83,8 +101,50 @@ class LinReg:
     def _residual_sum_of_squares(self):
         self.rss = np.sum(self.residuals() ** 2)
 
+    def _total_sum_of_squares(self):
+        self.tss = np.sum((self.dependent_data - np.mean(self.dependent_data)) ** 2)
+
+    def _r_squared(self):
+        self.r_squared = 1 - self.rss / self.tss
+
+    def _adjusted_r_squared(self):
+        self.adj_r_squared = 1 - (1 - self.r_squared) * (self.obs - 1) / self.degrees_of_freedom
+
+    def _aic(self):
+        k = self.n_regs + (1 if self.intercept else 0)
+        n = self.obs
+        rss = self.rss
+        log_likelihood = -n/2 * np.log(2 * np.pi) - n/2 * np.log(rss / (n - k)) - rss / (2 * (rss / (n - k)))
+        self.aic = -2 * log_likelihood + 2 * k
+
+    def _bic(self):
+        k = self.n_regs + (1 if self.intercept else 0)
+        n = self.obs
+        rss = self.rss
+        log_likelihood = -n/2 * np.log(2 * np.pi) - n/2 * np.log(rss / (n - k)) - rss / (2 * (rss / (n - k)))
+        self.bic = -2 * log_likelihood + np.log(n) * k
+
+    def _adjusted_aic(self):
+        self.adj_aic = self.aic + 2 * (self.n_regs + 1) * (self.n_regs + 2) / (self.obs - self.n_regs - 2)
+
+    def _adjusted_bic(self):
+        bic = self.bic
+        self.adj_bic = bic + np.log(self.obs) * (self.n_regs + 1) * (self.n_regs + 2) / (self.obs - self.n_regs - 2)
+
+    def f_statistic(self):
+        self.f_stat = (self.tss - self.rss) / self.n_regs / (self.rss / self.degrees_of_freedom)
+
+    def f_statistic_p_value(self):
+        p = self.n_regs
+        df1 = p
+        df2 = self.obs - p - (1 if self.intercept else 0)
+        self.f_stat_p_value = 1 - stats.f.cdf(self.f_stat, df1, df2)
+
     def _fit_standard_errors(self):
-        x = self._add_intercept(self.independent_data)
+        x = self.independent_data
+        if self.intercept:
+            x = self._add_intercept(x)
+
         error_variance = self.rss / self.degrees_of_freedom
         xtx_inv = np.linalg.pinv(x.T @ x)
 
@@ -110,9 +170,13 @@ class LinReg:
         self.p_values = 2 * (1 - stats.t.cdf(np.abs(self.t_stats), self.degrees_of_freedom))
 
     def _fit_conf_int(self):
+        df = self.degrees_of_freedom
+        confidence = 0.95
+        t_crit = stats.t.ppf((1 + confidence) / 2, df)
 
-        lower_bounds = self.coefficients - CRITICAL * self.standard_errors
-        upper_bounds = self.coefficients + CRITICAL * self.standard_errors
+        lower_bounds = self.coefficients - t_crit * self.standard_errors
+        upper_bounds = self.coefficients + t_crit * self.standard_errors
+
         self.conf_int = [[lower, upper] for lower, upper in zip(lower_bounds, upper_bounds)]
 
     def set_summary_data(self):
