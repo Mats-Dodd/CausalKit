@@ -41,7 +41,8 @@ class LinReg:
         self.t_stats = None
         self.p_values = None
         self.conf_int = None
-        self.summary_data = None
+        self.summary_data_coefficients = None
+        self.summary_data_model = None
         self.table = None
 
         self._fit()
@@ -184,7 +185,7 @@ class LinReg:
         self.conf_int = [[lower, upper] for lower, upper in zip(lower_bounds, upper_bounds)]
 
     def set_summary_data(self):
-        self.summary_data = {
+        self.summary_data_coefficients = {
             'Variable': ['Intercept'] + self.independent_vars,
             'Coefficient': [round(num, 3) for num in self.coefficients],
             'Std-Error': [round(num, 3) for num in self.standard_errors],
@@ -193,8 +194,24 @@ class LinReg:
             'Conf. Interval': [[round(num, 3) for num in sublist] for sublist in self.conf_int]
         }
 
+        self.summary_data_model = {
+            'Dep. Variable': self.outcome,
+            'No. Observations': self.obs,
+            'Standard Error Type': self.standard_error_type,
+            'R-squared': round(self.r_squared, 3),
+            'Adj. R-squared': round(self.adj_r_squared, 3),
+            'Log-Likelihood': round(self.log_likelihood, 3),
+            'AIC': round(self.aic, 3),
+            'BIC': round(self.bic, 3),
+            'Adj. AIC': round(self.adj_aic, 3),
+            'Adj. BIC': round(self.adj_bic, 3),
+            'F-statistic': round(self.f_stat, 3),
+            'Prob (F-statistic)': round(self.f_stat_p_value, 3)
+
+        }
+
     def set_table(self):
-        data = self.summary_data.copy()
+        data = self.summary_data_coefficients.copy()
         data['Lower Bound'] = [ci[0] for ci in data['Conf. Interval']]
         data['Upper Bound'] = [ci[1] for ci in data['Conf. Interval']]
         del data['Conf. Interval']
@@ -203,7 +220,9 @@ class LinReg:
 
     def summary(self, content_type='dynamic'):
 
-        summary_data = self.summary_data
+        summary_data_coefficients = self.summary_data_coefficients
+
+        summary_data_model = self.summary_data_model
 
         header_tooltips = {
             'Variable': '''
@@ -233,29 +252,230 @@ class LinReg:
     '''
         }
 
+        model_tooltips = {
+            'Dep. Variable': """Dependent Variable""",
+            'No. Observations': """Number of observations""",
+            'Standard Error Type': """Standard Error Type""",
+            'R-squared': """R-squared""",
+            'Adj. R-squared': """Adjusted R-squared""",
+            'Log-Likelihood': """Log-Likelihood""",
+            'AIC': """Akaike Information Criterion""",
+            'BIC': """Bayesian Information Criterion""",
+            'Adj. AIC': """Adjusted Akaike Information Criterion""",
+            'Adj. BIC': """Adjusted Bayesian Information Criterion""",
+            'F-statistic': """F-statistic""",
+            'Prob (F-statistic)': """Probability of F-statistic"""
+
+        }
+
         if content_type == 'dynamic':
-            html = "<h2 style='text-align: center;'>Regression Results</h2><hr style='border-style: dashed;'>"
+            first_half = list(summary_data_model.items())[:len(summary_data_model)//2]
+            second_half = list(summary_data_model.items())[len(summary_data_model)//2:]
+
+            html = "<h2 style='text-align: center;'>Regression Results</h2>"
+
+            html += "<div class='model-container'>"
+
+            html += "<div class='model-column'>"
+            for key, value in first_half:
+                tooltip = model_tooltips.get(key, "")
+                html += f"""
+                    <div class='model-row'>
+                        <div class="model-header">
+                            <div class="hover-box">
+                                {key}:
+                                <div class="hover-content">{tooltip}</div>
+                            </div>
+                        </div>
+                        <div class='model-data'>{value}</div>
+                    </div>
+                    """
+            html += "</div>"
+
+            # Second Column
+            html += "<div class='model-column'>"
+            for key, value in second_half:
+                tooltip = model_tooltips.get(key, "")
+                html += f"""
+                    <div class='model-row'>
+                        <div class="model-header">
+                            <div class="hover-box">
+                                {key}:
+                                <div class="hover-content">{tooltip}</div>
+                            </div>
+                        </div>
+                        <div class='model-data'>{value}</div>
+                    </div>
+                    """
+            html += "</div>"
+
+            html += "</div>"
+
+            html += "</div>"
+            html += "<hr style='border-style: dashed;'>"
+
+            html += """
+            <style>
+                .model-container {
+                    display: flex;
+                    justify-content: center;
+                    margin-bottom: 20px;
+                }
+            
+                .model-column {
+                    display: flex;
+                    flex-direction: column;
+                    margin-right: 10px;
+                }
+            
+                .model-row {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 5px;
+                }
+            
+                .model-header {
+                    min-width: 150px; /* Adjust this value as needed for alignment */
+                }
+            
+                .model-header .hover-box {
+                    cursor: pointer;
+                    position: relative;
+                    display: inline-block;
+                }
+            
+                .model-header .hover-content {
+                    display: none;
+                    position: absolute;
+                    background-color: grey;
+                    border: 1px solid black;
+                    padding: 15px;
+                    width: 350px;
+                    z-index: 1;
+                    white-space: wrap;
+                }
+            
+                .model-header:hover .hover-content {
+                    display: block;
+                }
+            
+                .model-data {
+                    text-align: left;
+                }
+            
+                .model-spacer {
+                    width: 20px; /* Adjust this width to increase or decrease the space */
+                }
+            
+                .model-key {
+                    flex: 1;
+                    text-align: right;
+                    margin-right: 10px;
+                }
+            
+                .model-value {
+                    flex: 1;
+                    text-align: left;
+                }
+            
+                .model-header .hover-box {
+                    cursor: pointer;
+                    position: relative;
+                    display: inline-block;
+                }
+            
+                .model-header .hover-content {
+                    display: none;
+                    position: absolute;
+                    background-color: grey;
+                    border: 1px solid black;
+                    padding: 15px;
+                    width: 350px;
+                    z-index: 1;
+                    white-space: wrap;
+                }
+            
+                .model-header:hover .hover-content {
+                    display: block;
+                    }
+            
+            </style>
+            """
+
+            html += """
+                        <style>
+                        .container {
+                            display: flex;
+                            justify-content: center;
+                            align-items: flex-start;
+                        }
+                        
+                        .column {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            margin-right: 10px;
+                        }
+                        
+                        .header .hover-box {
+                            cursor: pointer;
+                            position: relative;
+                            display: inline-block;
+                        }
+                        
+                        .header .hover-content {
+                            display: none;
+                            position: absolute;
+                            background-color: grey;
+                            border: 1px solid black;
+                            padding: 15px;
+                            width: 350px;
+                            z-index: 1;
+                            white-space: wrap;
+                        }
+                        
+                        .header:hover .hover-content {
+                            display: block;
+                        }
+                        
+                        .data-cell {
+                            text-align: center;
+                            margin: 2px 0;
+                        }
+                        
+                        .red-light {
+                            color: red; /* Light shade for P>|t| < 0.05 */
+                        }
+                        
+                        .red-medium {
+                            color: darkred; /* Medium shade for P>|t| < 0.01 */
+                        }
+                        
+                        .red-deep {
+                            color: maroon; /* Deep shade for P>|t| < 0.001 */
+                        }
+                        </style>
+                        """
 
             html += "<div class='container'>"
 
-            for key in summary_data.keys():
-                # Column container
+            for key in summary_data_coefficients.keys():
+
                 html += "<div class='column'>"
 
-                # Header
                 tooltip = header_tooltips.get(key, "")
                 html += f"""
-                <div class='header'>
-                    <div class="hover-box">
-                        {key}
-                        <div class="hover-content">{tooltip}</div>
-                    </div>
-                </div>
-                """
+                            <div class='header'>
+                                <div class="hover-box">
+                                    {key}
+                                    <div class="hover-content">{tooltip}</div>
+                                </div>
+                            </div>
+                            """
 
                 html += "<hr style='border-style: dashed; width: 100%;'>"
 
-                for value in summary_data[key]:
+                for value in summary_data_coefficients[key]:
                     if isinstance(value, list):
                         value = f"{value[0]} - {value[1]}"
 
@@ -281,81 +501,28 @@ class LinReg:
 
             html += "</div>"
 
-            html += """
-            <style>
-            .container {
-                display: flex;
-                justify-content: center;
-                align-items: flex-start;
-            }
-            
-            .column {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                margin-right: 10px;
-            }
-            
-            .header .hover-box {
-                cursor: pointer;
-                position: relative;
-                display: inline-block;
-            }
-            
-            .header .hover-content {
-                display: none;
-                position: absolute;
-                background-color: grey;
-                border: 1px solid black;
-                padding: 15px;
-                width: 350px;
-                z-index: 1;
-                white-space: wrap;
-            }
-            
-            .header:hover .hover-content {
-                display: block;
-            }
-            
-            .data-cell {
-                text-align: center;
-                margin: 2px 0;
-            }
-            
-            .red-light {
-                color: red; /* Light shade for P>|t| < 0.05 */
-            }
-            
-            .red-medium {
-                color: darkred; /* Medium shade for P>|t| < 0.01 */
-            }
-            
-            .red-deep {
-                color: maroon; /* Deep shade for P>|t| < 0.001 */
-            }
-            </style>
-            """
+
         else:
             html = "<h1 style='text-align:center;'>Regression Results</h1><pre style='text-align:center; font-family:monospace;'>"
 
-            column_widths = {key: max(max([len(str(x)) for x in summary_data[key]]), len(key)) for key in summary_data.keys()}
-            column_widths['Conf. Interval'] = max(max([len(f"{x[0]} - {x[1]}") for x in summary_data['Conf. Interval']]), len('Conf. Interval'))
+            column_widths = {key: max(max([len(str(x)) for x in summary_data_coefficients[key]]), len(key)) for key in summary_data_coefficients.keys()}
+            column_widths['Conf. Interval'] = max(max([len(f"{x[0]} - {x[1]}") for x in summary_data_coefficients['Conf. Interval']]), len('Conf. Interval'))
 
-            headers = [key.center(column_widths[key]) for key in summary_data.keys()]
+            headers = [key.center(column_widths[key]) for key in summary_data_coefficients.keys()]
             html += ' '.join(headers) + "\n"
 
-            separator = '-'.join('-' * column_widths[key] for key in summary_data.keys())
+            separator = '-'.join('-' * column_widths[key] for key in summary_data_coefficients.keys())
             html += separator + "\n"
 
-            for i in range(len(summary_data['Variable'])):
+            for i in range(len(summary_data_coefficients['Variable'])):
                 row = []
-                for key in summary_data.keys():
+                for key in summary_data_coefficients.keys():
                     if key == 'Conf. Interval':
 
-                        ci_text = f"{summary_data[key][i][0]} - {summary_data[key][i][1]}"
+                        ci_text = f"{summary_data_coefficients[key][i][0]} - {summary_data_coefficients[key][i][1]}"
                         row.append(ci_text.center(column_widths[key]))
                     else:
-                        row.append(str(summary_data[key][i]).center(column_widths[key]))
+                        row.append(str(summary_data_coefficients[key][i]).center(column_widths[key]))
                 html += ' '.join(row) + "\n"
 
             html += "</pre>"
