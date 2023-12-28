@@ -196,7 +196,7 @@ class LinReg:
 
         self.summary_data_model = {
             'Dep. Variable': self.outcome,
-            'No. Observations': self.obs,
+            'Observations': self.obs,
             'Standard Error Type': self.standard_error_type,
             'R-squared': round(self.r_squared, 3),
             'Adj. R-squared': round(self.adj_r_squared, 3),
@@ -254,7 +254,7 @@ class LinReg:
 
         model_tooltips = {
             'Dep. Variable': """Dependent Variable""",
-            'No. Observations': """Number of observations""",
+            'Observations': """Number of observations""",
             'Standard Error Type': """Standard Error Type""",
             'R-squared': """R-squared""",
             'Adj. R-squared': """Adjusted R-squared""",
