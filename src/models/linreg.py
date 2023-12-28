@@ -505,25 +505,36 @@ class LinReg:
         else:
             html = "<h1 style='text-align:center;'>Regression Results</h1><pre style='text-align:center; font-family:monospace;'>"
 
+            first_half_model = list(summary_data_model.items())[:len(summary_data_model)//2]
+            second_half_model = list(summary_data_model.items())[len(summary_data_model)//2:]
+
+            max_key_len = max(len(key) for key, _ in summary_data_model.items()) + 2
+
+            for (key1, value1), (key2, value2) in zip(first_half_model, second_half_model):
+                key1_formatted = f"{key1 + ': ':<{max_key_len}}"
+                key2_formatted = f"{key2 + ': ':<{max_key_len}}"
+                html += f"{key1_formatted}{str(value1).rjust(10)}    {key2_formatted}{str(value2).rjust(10)}\n"
+
+            html += "\n"
+
             column_widths = {key: max(max([len(str(x)) for x in summary_data_coefficients[key]]), len(key)) for key in summary_data_coefficients.keys()}
             column_widths['Conf. Interval'] = max(max([len(f"{x[0]} - {x[1]}") for x in summary_data_coefficients['Conf. Interval']]), len('Conf. Interval'))
 
-            headers = [key.center(column_widths[key]) for key in summary_data_coefficients.keys()]
-            html += ' '.join(headers) + "\n"
+            header_line = ' '.join(key.center(column_widths[key]) for key in summary_data_coefficients.keys())
+            html += header_line.center(len(header_line) + max_key_len) + "\n"
 
             separator = '-'.join('-' * column_widths[key] for key in summary_data_coefficients.keys())
-            html += separator + "\n"
+            html += separator.center(len(header_line) + max_key_len) + "\n"
 
             for i in range(len(summary_data_coefficients['Variable'])):
                 row = []
                 for key in summary_data_coefficients.keys():
                     if key == 'Conf. Interval':
-
                         ci_text = f"{summary_data_coefficients[key][i][0]} - {summary_data_coefficients[key][i][1]}"
                         row.append(ci_text.center(column_widths[key]))
                     else:
                         row.append(str(summary_data_coefficients[key][i]).center(column_widths[key]))
-                html += ' '.join(row) + "\n"
+                html += ' '.join(row).center(len(header_line) + max_key_len) + "\n"
 
             html += "</pre>"
 
