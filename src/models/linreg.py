@@ -226,45 +226,94 @@ class LinReg:
 
         header_tooltips = {
             'Variable': '''
-        This is the independent variable in the regression model, which is the factor being manipulated 
-        or changed to observe its effect on the dependent variable.
-    ''',
+                This is the independent variable in the regression model, which is the factor being manipulated 
+                or changed to observe its effect on the dependent variable.
+                ''',
+
             'Coefficient': '''
-        This represents the coefficient estimate of the variable, indicating how much the dependent variable 
-        is expected to change when the independent variable changes by one unit.
-    ''',
+                This represents the coefficient estimate of the variable, indicating how much the dependent variable 
+                is expected to change when the independent variable changes by one unit.
+                ''',
+
             'Std-Error': '''
-        This stands for the standard error of the coefficient estimate, which measures the average distance that
-         the estimated coefficients are from the actual average value of the coefficients.
-    ''',
+                This stands for the standard error of the coefficient estimate, which measures the average distance that
+                the estimated coefficients are from the actual average value of the coefficients.
+                ''',
+
             'T-Statistic': '''
-        The T- Statistic helps determining whether there 
-        is a significant relationship between the independent and dependent variables by comparing the estimated 
-        coefficient to its standard error.
-    ''',
+                The T- Statistic helps determining whether there 
+                is a significant relationship between the independent and dependent variables by comparing the estimated 
+                coefficient to its standard error.
+                ''',
+
             'P>|t|': '''
-        This denotes the p-value, which indicates the probability of observing the data, or something more extreme,
-         assuming the null hypothesis is true. 
-    ''',
+                This denotes the p-value, which indicates the probability of observing the data, or something more extreme,
+                assuming the null hypothesis is true. 
+                ''',
             'Conf. Interval': '''
-        The 95% CI for the coefficient estimate. If we were to take many samples and build a 
-        confidence interval from each of them, 95% of these intervals would contain the true coefficient value.
-    '''
+                The 95% CI for the coefficient estimate. If we were to take many samples and build a 
+                confidence interval from each of them, 95% of these intervals would contain the true coefficient value.
+                '''
         }
 
         model_tooltips = {
-            'Dep. Variable': """Dependent Variable""",
-            'Observations': """Number of observations""",
-            'Standard Error Type': """Standard Error Type""",
-            'R-squared': """R-squared""",
-            'Adj. R-squared': """Adjusted R-squared""",
-            'Log-Likelihood': """Log-Likelihood""",
-            'AIC': """Akaike Information Criterion""",
-            'BIC': """Bayesian Information Criterion""",
-            'Adj. AIC': """Adjusted Akaike Information Criterion""",
-            'Adj. BIC': """Adjusted Bayesian Information Criterion""",
-            'F-statistic': """F-statistic""",
-            'Prob (F-statistic)': """Probability of F-statistic"""
+            'Dep. Variable': """
+                The dependent variable/outcome is the main variable of interest you are trying to 
+                explain or predict. It is the outcome that changes in response to the independent variables. In a 
+                regression model, this is what you are modeling as a function of other variables.""",
+
+            'Observations': """
+                This refers to the number of data points or individual records used in your regression to estimate the 
+                model parameters. A higher number of observations can provide more information, but it's also important 
+                that these observations are representative of the population.""",
+
+            'Standard Error Type': """
+                The standard error type indicates the measurement of variability for coefficient estimates. Different 
+                types (like robust standard errors) can be chosen based on data characteristics. In practice, if 
+                there's suspicion of heteroskedasticity, using robust standard errors is a common approach""",
+
+            'R-squared': """
+                R-squared is a statistical measure that represents the proportion of the variance in the dependent 
+                variable that is predictable from the independent variables. It ranges from 0 to 1, with higher values 
+                indicating a better fit of the model. It's a quick way to see how well your model explains the 
+                variation in the data.""",
+
+            'Adj. R-squared': """
+                Adjusted for the number of predictors, it provides a more accurate measure of the model's explanatory 
+                power. It's lower than R-squared, penalizing excessive use of unhelpful predictors. Ideally,
+                 Adj. R-squared should be close to the R-squared value for a well-specified model.""",
+
+            'Log-Likelihood': """
+                Reflects the likelihood of observing the given data under the model. Higher values 
+                indicate better model fit. In model comparisons, a higher log-likelihood generally signifies a better 
+                model, especially when comparing models with a similar number of parameters.""",
+
+            'AIC': """
+                Balances model fit and complexity, penalizing extra parameters. Lower AIC suggests a better model. 
+                A rule of thumb is that a difference in AIC values of more than 2 indicates a noticeable difference in
+                 model quality.""",
+
+            'BIC': """
+                Similar to AIC, but with a stricter penalty for model complexity. Lower BIC values indicate a 
+                better model. BIC is particularly useful in larger datasets and when comparing models with different 
+                numbers of parameters.""",
+
+            'Adj. AIC': """
+            Adjusts AIC for sample size. Like AIC, lower values suggest a better model. This adjustment is especially 
+            important in smaller samples or when comparing models with vastly different numbers of observations.""",
+
+            'Adj. BIC': """
+            Adjusts BIC for sample size, useful in smaller datasets. Lower values indicate a better 
+            model. Adjusted BIC is crucial for small sample sizes, providing a more accurate comparison of models.""",
+
+            'F-statistic': """
+            Tests the overall significance of the model. A higher value indicates a better model. As a rule of thumb,
+             an F-statistic greater than 10 is often considered indicative of a strong relationship between the 
+             dependent and independent variables.""",
+
+            'Prob (F-statistic)': """Indicates the probability of observing the given F-statistic if no independent 
+            variables affect the dependent variable. Lower values suggest significant model fit. Typically, a 
+            Prob (F-statistic) less than 0.05 indicates that the model is statistically significant."""
 
         }
 
