@@ -24,8 +24,6 @@ pip install causalkit
 Things to implement:
 
 1. heterogeneuous treatment effects with * or : operator between variables (e.g. x1:x2), allow for multiple variables
-2. add . shortcut for all variables in a dataframe
-3. add ~ shortcut for all variables in a dataframe except for the one specified
 2. add quadratic terms with ^ operator (e.g. x1^2)
 2. fixed effects, not displaying all the coefficients that are fixed in summary
 3. allow fixed effects to work with categorical variables use traffic fatalities from 271

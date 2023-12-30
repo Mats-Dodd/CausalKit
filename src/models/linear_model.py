@@ -43,20 +43,27 @@ class LinearModel(ABC):
     def _parse_independent_vars(self):
         """
         Parse the independent variables to the correct format.
-        potential variables: ['*', ':', '.', '~', '^']
-        """
-        if any(char in var for var in self.independent_vars for char in ['*', ':', '.', '~', '^']):
 
-            if any('*' in var for var in self.independent_vars):
-                print('using * operator')
+        '*': all columns except for the outcome as independent variables,
+        '~': all columns except those that are equal to outcome or have a prefix '~' in self.independent_vars,
+        ':': interaction between those specific variables,
+        '*': interaction between those two + their normal values,
+        '^': to the power of the number after the '^'
+        """
+        if any(char in var for var in self.independent_vars for char in ['.', ':', '.', '!', '^']):
+            contains_caret = any('^' in var for var in self.independent_vars)
+            contains_no_star_or_colon = all('*' not in var and ':' not in var for var in self.independent_vars)
+            if any('.' in var for var in self.independent_vars):
                 self._set_all_operator()
 
-            elif any('~' in var for var in self.independent_vars):
-                print('using ~ operator')
-                print(self.independent_vars)
+            elif any('!' in var for var in self.independent_vars):
                 self._set_not_operator()
+
+            elif contains_caret and contains_no_star_or_colon:
+                self._set_power_operator()
+
         else:
-            print('using normal operator')
+
             self.independent_data = self.data[self.independent_vars].values
 
     def _set_all_operator(self):
@@ -69,9 +76,9 @@ class LinearModel(ABC):
     def _set_not_operator(self):
         """
         Use all columns from self.data.columns as independent variables,
-        except those that are equal to self.outcome or have a prefix '~' in self.independent_vars.
+        except those that are equal to outcome or have a prefix '~' in self.independent_vars.
         """
-        excluded_vars = {var.lstrip('~') for var in self.independent_vars if var.startswith('~')}
+        excluded_vars = {var.lstrip('!') for var in self.independent_vars if var.startswith('!')}
 
         for var in excluded_vars:
             if var not in self.data.columns:
@@ -82,6 +89,33 @@ class LinearModel(ABC):
 
         self.independent_vars = [col for col in self.data.columns if col != self.outcome and col not in excluded_vars]
         self.independent_data = self.data[self.independent_vars].values
+
+    def _set_power_operator(self):
+        """
+        Set the independent variables to the power of the number after the '^' and also include all lower powers.
+        """
+        new_vars = set()  # Using a set to avoid duplicates
+        for var in self.independent_vars:
+            if '^' in var:
+                base_var, exponent_str = var.split('^')
+                try:
+                    max_exponent = int(exponent_str)
+                except ValueError:
+                    raise ValueError(f"Invalid exponent '{exponent_str}' in variable '{var}'. Check for a typo.")
+
+                if base_var not in self.data.columns:
+                    raise ValueError(f"Base variable '{base_var}' not found in DataFrame. Check for a typo in '{var}'.")
+
+                for exponent in range(2, max_exponent + 1):
+                    transformed_col_name = f"{base_var}^{exponent}"
+                    self.data[transformed_col_name] = self.data[base_var] ** exponent
+                    new_vars.add(transformed_col_name)
+            else:
+                new_vars.add(var)
+
+        self.independent_vars = list(new_vars)
+        self.independent_data = self.data[self.independent_vars].values
+
 
     def _add_intercept(self, x):
         """

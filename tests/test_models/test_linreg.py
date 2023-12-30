@@ -233,7 +233,7 @@ def regression_data_all_operator_slr():
 
 @pytest.fixture(scope="class")
 def linreg_model_all_operator_slr(regression_data_all_operator_slr):
-    return LinReg(df=regression_data_all_operator_slr, outcome="outcome", independent=["*"])
+    return LinReg(df=regression_data_all_operator_slr, outcome="outcome", independent=["."])
 
 
 @pytest.fixture(scope="class")
@@ -307,7 +307,7 @@ def regression_data_all_operator_mlr():
 
 @pytest.fixture(scope="class")
 def linreg_model_all_operator_mlr(regression_data_all_operator_mlr):
-    return LinReg(df=regression_data_all_operator_mlr, outcome="outcome", independent=["*"])
+    return LinReg(df=regression_data_all_operator_mlr, outcome="outcome", independent=["."])
 
 
 @pytest.fixture(scope="class")
@@ -381,7 +381,7 @@ def regression_data_not_operator_mlr():
 
 @pytest.fixture(scope="class")
 def linreg_model_not_operator_mlr(regression_data_not_operator_mlr):
-    return LinReg(df=regression_data_not_operator_mlr, outcome="outcome", independent=["~independent2"])
+    return LinReg(df=regression_data_not_operator_mlr, outcome="outcome", independent=["!independent2"])
 
 
 @pytest.fixture(scope="class")
@@ -427,8 +427,8 @@ def regression_data_exclude_multiple():
 def linreg_model_exclude_multiple(regression_data_exclude_multiple):
     return LinReg(df=regression_data_exclude_multiple,
                   outcome="outcome",
-                  independent=["~independent2",
-                               "~independent3"])
+                  independent=["!independent2",
+                               "!independent3"])
 
 
 @pytest.fixture(scope="class")
@@ -488,9 +488,9 @@ class TestRegressionNoExclusion:
 def linreg_model_exclude_all(regression_data_exclude_multiple):
     return LinReg(df=regression_data_exclude_multiple,
                   outcome="outcome",
-                  independent=["~independent1",
-                               "~independent2",
-                               "~independent3"])
+                  independent=["!independent1",
+                               "!independent2",
+                               "!independent3"])
 
 
 class TestRegressionExcludeAll:
@@ -499,7 +499,7 @@ class TestRegressionExcludeAll:
         with pytest.raises(ValueError) as excinfo:
             LinReg(df=regression_data_exclude_multiple,
                    outcome="outcome",
-                   independent=["~independent1", "~independent2", "~independent3"])
+                   independent=["!independent1", "!independent2", "!independent3"])
         assert 'Oops, you cant exclude all columns from your data.' in str(excinfo.value)
 
 
@@ -507,7 +507,7 @@ class TestRegressionExcludeAll:
 def linreg_model_exclude_nonexistent(regression_data_exclude_multiple):
     return LinReg(df=regression_data_exclude_multiple,
                   outcome="outcome",
-                  independent=["~nonexistent",
+                  independent=["!nonexistent",
                                "independent1",
                                "independent2",
                                "independent3"])
@@ -519,6 +519,68 @@ class TestRegressionExcludeNonexistent:
         with pytest.raises(ValueError) as excinfo:
             LinReg(df=regression_data_exclude_multiple,
                    outcome="outcome",
-                   independent=["~nonexistent", "independent1", "independent2", "independent3"])
+                   independent=["!nonexistent", "independent1", "independent2", "independent3"])
         assert "Oops, nonexistent is not a column in your data. Check if youve made a typo." in str(excinfo.value)
 
+
+@pytest.fixture(scope="class")
+def data_with_base_variable():
+    """DataFrame with a base variable already present"""
+    np.random.seed(42)
+    x = np.random.randn(50)
+    y = 2 * x + np.random.randn(50)
+    data = pd.DataFrame({'x': x, 'y': y})
+    return data
+
+
+@pytest.fixture(scope="class")
+def data_without_base_variable():
+    """DataFrame without the base variable present"""
+    np.random.seed(42)
+    y = np.random.randn(50)
+    data = pd.DataFrame({'y': y})
+    return data
+
+
+@pytest.fixture(scope="class")
+def model_with_transformation(data_with_base_variable):
+    return LinReg(df=data_with_base_variable,
+                  outcome="y",
+                  independent=["x^3"])
+
+
+@pytest.fixture(scope="class")
+def model_with_transformation_missing_base(data_without_base_variable):
+    return LinReg(df=data_without_base_variable,
+                  outcome="y",
+                  independent=["x^3"])
+
+
+class TestModelWithTransformation:
+    def test_independent_vars_include_transformed(self, model_with_transformation):
+        assert "x^2" in model_with_transformation.independent_vars
+        assert "x^3" in model_with_transformation.independent_vars
+
+    def test_data_includes_transformed_columns(self, model_with_transformation):
+        assert "x^2" in model_with_transformation.data.columns
+        assert "x^3" in model_with_transformation.data.columns
+
+
+class TestModelWithTransformationMissingBase:
+
+    def test_independent_vars_include_transformed(self, data_without_base_variable):
+        with pytest.raises(ValueError) as excinfo:
+            LinReg(df=data_without_base_variable,
+                   outcome="y",
+                   independent=["x^3"])
+        assert f"Base variable 'x' not found in DataFrame. Check for a typo in 'x^3'." in str(excinfo.value)
+
+
+class TestModelWithTransformationBadChar:
+
+    def test_independent_vars_include_transformed(self, data_without_base_variable):
+        with pytest.raises(ValueError) as excinfo:
+            LinReg(df=data_without_base_variable,
+                   outcome="y",
+                   independent=["x^i"])
+        assert f"Invalid exponent 'i' in variable 'x^i'. Check for a typo." in str(excinfo.value)
