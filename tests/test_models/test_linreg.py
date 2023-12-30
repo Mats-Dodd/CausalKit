@@ -156,8 +156,8 @@ def linreg_model_robust(regression_data_robust):
 def sm_model_robust(regression_data_robust):
     x = regression_data_robust["independent"]
     y = regression_data_robust["outcome"]
-    X = sm.add_constant(x)
-    return sm.OLS(y, X).fit(cov_type='HC0')
+    x = sm.add_constant(x)
+    return sm.OLS(y, x).fit(cov_type='HC0')
 
 
 class TestRegressionRobust:
@@ -222,5 +222,48 @@ class TestRegressionMetrics:
         assert np.isclose(linreg_model_metrics.bic, sm_model_metrics.bic, atol=1e-1)
 
 
+@pytest.fixture(scope="class")
+def regression_data_all_operator_slr():
+    np.random.seed(0)
+    x = np.linspace(0, 10, 100)
+    y = 5 * x + 10 + np.random.normal(0, 2, 100)
+    data = pd.DataFrame({'outcome': y, 'independent': x})
+    return data
 
 
+@pytest.fixture(scope="class")
+def linreg_model_all_operator_slr(regression_data_all_operator_slr):
+    return LinReg(df=regression_data_all_operator_slr, outcome="outcome", independent=["*"])
+
+
+@pytest.fixture(scope="class")
+def sm_model_all_operator_slr(regression_data_all_operator_slr):
+    x = regression_data_all_operator_slr["independent"]
+    y = regression_data_all_operator_slr["outcome"]
+    x = sm.add_constant(x)
+    return sm.OLS(y, x).fit()
+
+
+class TestRegressionAllOperator:
+
+    def test_coefficients(self, linreg_model_all_operator_slr, sm_model_all_operator_slr):
+        assert np.isclose(linreg_model_all_operator_slr.coefficients[0], sm_model_all_operator_slr.params.iloc[0], atol=1e-2)
+        assert np.isclose(linreg_model_all_operator_slr.coefficients[1], sm_model_all_operator_slr.params.iloc[1], atol=1e-2)
+
+    def test_standard_errors(self, linreg_model_all_operator_slr, sm_model_all_operator_slr):
+        assert np.isclose(linreg_model_all_operator_slr.standard_errors[0], sm_model_all_operator_slr.bse.iloc[0], atol=1e-2)
+        assert np.isclose(linreg_model_all_operator_slr.standard_errors[1], sm_model_all_operator_slr.bse.iloc[1], atol=1e-2)
+
+    def test_p_values(self, linreg_model_all_operator_slr, sm_model_all_operator_slr):
+        assert np.isclose(linreg_model_all_operator_slr.p_values[0], sm_model_all_operator_slr.pvalues.iloc[0], atol=1e-2)
+        assert np.isclose(linreg_model_all_operator_slr.p_values[1], sm_model_all_operator_slr.pvalues.iloc[1], atol=1e-2)
+
+    def test_t_statistics(self, linreg_model_all_operator_slr, sm_model_all_operator_slr):
+        assert np.isclose(linreg_model_all_operator_slr.t_stats[0], sm_model_all_operator_slr.tvalues.iloc[0], atol=1e-2)
+        assert np.isclose(linreg_model_all_operator_slr.t_stats[1], sm_model_all_operator_slr.tvalues.iloc[1], atol=1e-2)
+
+    def test_confint(self, linreg_model_all_operator_slr, sm_model_all_operator_slr):
+        assert np.isclose(linreg_model_all_operator_slr.conf_int[0][0], sm_model_all_operator_slr.conf_int().iloc[0, 0], atol=1e-2)
+        assert np.isclose(linreg_model_all_operator_slr.conf_int[0][1], sm_model_all_operator_slr.conf_int().iloc[0, 1], atol=1e-2)
+        assert np.isclose(linreg_model_all_operator_slr.conf_int[1][0], sm_model_all_operator_slr.conf_int().iloc[1, 0], atol=1e-2)
+        assert np.isclose(linreg_model_all_operator_slr.conf_int[1][1], sm_model_all_operator_slr.conf_int().iloc[1, 1], atol=1e-2)
