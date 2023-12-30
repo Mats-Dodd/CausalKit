@@ -55,6 +55,7 @@ class LinearModel(ABC):
             contains_colon = any(':' in var for var in self.independent_vars)
             contains_no_star_or_colon = all('*' not in var and ':' not in var for var in self.independent_vars)
             contains_no_caret = all('^' not in var for var in self.independent_vars)
+            contains_no_star = all('*' not in var for var in self.independent_vars)
             contains_colon_or_star = any('*' in var or ':' in var for var in self.independent_vars)
             if any('.' in var for var in self.independent_vars):
                 self._set_all_operator()
@@ -67,10 +68,18 @@ class LinearModel(ABC):
 
             elif contains_no_caret and contains_colon_or_star:
 
-                if contains_colon:
+                if contains_colon and contains_no_star:
                     self._set_basic_interaction_operator()
                 else:
                     self._set_advanced_interaction_operator()
+
+            elif contains_caret and contains_colon_or_star:
+
+                if contains_colon and contains_no_star:
+                    self._set_basic_interaction_operator_with_polynomial()
+
+                else:
+                    self._set_advanced_interaction_operator_with_polynomial()
 
         else:
 
@@ -173,6 +182,85 @@ class LinearModel(ABC):
 
         self.independent_vars = list(new_vars)
         self.independent_data = self.data[self.independent_vars].values
+
+    def _set_basic_interaction_operator_with_polynomial(self):
+        """
+        Set interactions between a variable and its polynomial features.
+        For example, ["a:x^2"] should lead to y = intercept + ax + ax^2.
+        """
+        new_vars = set()
+        for var in self.independent_vars:
+            if ':' in var and '^' in var:
+                base_var, poly_var = var.split(':')
+                if base_var not in self.data.columns:
+                    raise ValueError(f"Variable '{base_var}' not found in DataFrame. Check for a typo in '{var}'.")
+
+                poly_base_var, exponent_str = poly_var.split('^')
+                try:
+                    max_exponent = int(exponent_str)
+                except ValueError:
+                    raise ValueError(f"Invalid exponent '{exponent_str}' in variable '{poly_var}'. Check for a typo.")
+
+                if poly_base_var not in self.data.columns:
+                    raise ValueError(f"Base variable '{poly_base_var}' not found in DataFrame. Check for a typo in '{poly_var}'.")
+
+                for exponent in range(1, max_exponent + 1):  # Include the base variable itself (exponent 1)
+                    transformed_col_name = f"{base_var}:{poly_base_var}^{exponent}"
+                    self.data[transformed_col_name] = self.data[base_var] * (self.data[poly_base_var] ** exponent)
+                    new_vars.add(transformed_col_name)
+            else:
+                new_vars.add(var)
+
+        self.independent_vars = list(new_vars)
+        self.independent_data = self.data[self.independent_vars].values
+
+    def _set_advanced_interaction_operator_with_polynomial(self):
+        """
+        Set the interaction between two variables and include their individual terms,
+        as well as interactions with polynomial features.
+        For example, ["a * x^2"] leads to y = intercept + a + x + a*x + a*x^2.
+        """
+        new_vars = set()
+        for var in self.independent_vars:
+            if '*' in var:
+                var1, poly_var = var.split('*')
+                if var1 not in self.data.columns:
+                    raise ValueError(f"Variable '{var1}' not found in DataFrame. Check for a typo in '{var}'.")
+
+                # Check if the second variable is a polynomial
+                if '^' in poly_var:
+                    poly_base_var, exponent_str = poly_var.split('^')
+                    try:
+                        max_exponent = int(exponent_str)
+                    except ValueError:
+                        raise ValueError(f"Invalid exponent '{exponent_str}' in variable '{poly_var}'. Check for a typo.")
+
+                    if poly_base_var not in self.data.columns:
+                        raise ValueError(f"Base variable '{poly_base_var}' not found in DataFrame. Check for a typo in '{poly_var}'.")
+
+                    for exponent in range(1, max_exponent + 1):  # Include the base variable itself
+                        transformed_col_name = f"{var1}*{poly_base_var}^{exponent}"
+                        self.data[transformed_col_name] = self.data[var1] * (self.data[poly_base_var] ** exponent)
+                        new_vars.add(transformed_col_name)
+
+                    new_vars.add(var1)
+                    new_vars.add(poly_base_var)
+                else:
+                    if poly_var not in self.data.columns:
+                        raise ValueError(f"Variable '{poly_var}' not found in DataFrame. Check for a typo in '{var}'.")
+
+                    transformed_col_name = f"{var1}*{poly_var}"
+                    self.data[transformed_col_name] = self.data[var1] * self.data[poly_var]
+                    new_vars.add(transformed_col_name)
+                    new_vars.add(var1)
+                    new_vars.add(poly_var)
+            else:
+                new_vars.add(var)
+
+        self.independent_vars = list(new_vars)
+        self.independent_data = self.data[self.independent_vars].values
+
+
 
     def _add_intercept(self, x):
         """
