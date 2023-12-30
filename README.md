@@ -21,3 +21,21 @@ CausalKit is a Python package specifically designed for economics students and r
 pip install causalkit
 ```
 
+Things to implement:
+
+1. heterogeneuous treatment effects with * or : operator between variables (e.g. x1:x2), allow for multiple variables
+2. add . shortcut for all variables in a dataframe
+3. add ~ shortcut for all variables in a dataframe except for the one specified
+2. add quadratic terms
+2. fixed effects, not displaying all the coefficients that are fixed in summary
+3. allow fixed effects to work with categorical variables use traffic fatalities from 271
+4. add IV Regression use angrist data as example
+5. add t test
+6. add f test
+7. add random effect and mixed effects models
+8. add model diagnostics + assumption checks (linearity, normality of residuals, homoscedasticity, and absence of multicollinearity. This could include plots (like QQ plots, residual vs. fitted value plots) and statistical tests.)
+9. Regularization (Lasso, Ridge, Elastic Net)
+10. add GLM's (logistic, poisson, negative binomial, multinomial)
+11. Bootstrap + resampling methods (jackknife, permutation tests, )
+12. add typical Causal inferenece methods (matching, regression discontinuity, difference in differences,  regression kink, synthetic control, etc.)
+13. interactive interaction explorer (interactive vis with sliders for continuous variables and dropdowns for categorical variables)
