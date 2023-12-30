@@ -365,3 +365,160 @@ class TestRegressionAllOperatorMlr:
         assert np.isclose(linreg_model_all_operator_mlr.conf_int[1][1],
                           sm_model_all_operator_mlr.conf_int().iloc[1, 1],
                           atol=1e-1)
+
+
+@pytest.fixture(scope="class")
+def regression_data_not_operator_mlr():
+    np.random.seed(69)
+    x = np.linspace(0, 5, 50)
+    z = np.linspace(3, 8, 50)
+    y = 1 + 3 * x + 5*z + np.random.normal(0, 2, 50)
+    data = pd.DataFrame({'outcome': y,
+                         'independent1': x,
+                         'independent2': z})
+    return data
+
+
+@pytest.fixture(scope="class")
+def linreg_model_not_operator_mlr(regression_data_not_operator_mlr):
+    return LinReg(df=regression_data_not_operator_mlr, outcome="outcome", independent=["~independent2"])
+
+
+@pytest.fixture(scope="class")
+def sm_model_not_operator_mlr(regression_data_not_operator_mlr):
+    x = regression_data_not_operator_mlr['independent1']
+    y = regression_data_not_operator_mlr['outcome']
+    x = sm.add_constant(x)
+    return sm.OLS(y, x).fit()
+
+
+class TestRegressionNotOperatorMlr:
+
+    def test_coefficients(self, linreg_model_not_operator_mlr, sm_model_not_operator_mlr):
+        assert np.isclose(linreg_model_not_operator_mlr.coefficients[0],
+                          sm_model_not_operator_mlr.params.iloc[0],
+                          atol=1e-1)
+        assert np.isclose(linreg_model_not_operator_mlr.coefficients[1],
+                          sm_model_not_operator_mlr.params.iloc[1],
+                          atol=1e-1)
+
+    def test_standard_errors(self, linreg_model_not_operator_mlr, sm_model_not_operator_mlr):
+        assert np.isclose(linreg_model_not_operator_mlr.standard_errors[0],
+                          sm_model_not_operator_mlr.bse.iloc[0],
+                          atol=1e-1)
+        assert np.isclose(linreg_model_not_operator_mlr.standard_errors[1],
+                          sm_model_not_operator_mlr.bse.iloc[1],
+                          atol=1e-1)
+
+
+@pytest.fixture(scope="class")
+def regression_data_exclude_multiple():
+    np.random.seed(69)
+    x1, x2, x3 = np.random.randn(50), np.random.randn(50), np.random.randn(50)
+    y = 2 * x1 + 3 * x2 + 4 * x3 + np.random.randn(50)
+    data = pd.DataFrame({'outcome': y,
+                         'independent1': x1,
+                         'independent2': x2,
+                         'independent3': x3})
+    return data
+
+
+@pytest.fixture(scope="class")
+def linreg_model_exclude_multiple(regression_data_exclude_multiple):
+    return LinReg(df=regression_data_exclude_multiple,
+                  outcome="outcome",
+                  independent=["~independent2",
+                               "~independent3"])
+
+
+@pytest.fixture(scope="class")
+def sm_model_exclude_multiple(regression_data_exclude_multiple):
+    x = regression_data_exclude_multiple[['independent1']]
+    y = regression_data_exclude_multiple['outcome']
+    x = sm.add_constant(x)
+    return sm.OLS(y, x).fit()
+
+
+class TestRegressionExcludeMultiple:
+
+    def test_coefficients(self, linreg_model_exclude_multiple, sm_model_exclude_multiple):
+        np.testing.assert_allclose(linreg_model_exclude_multiple.coefficients,
+                                   sm_model_exclude_multiple.params,
+                                   atol=1e-1)
+
+    def test_standard_errors(self, linreg_model_exclude_multiple, sm_model_exclude_multiple):
+        np.testing.assert_allclose(linreg_model_exclude_multiple.standard_errors,
+                                   sm_model_exclude_multiple.bse,
+                                   atol=1e-1)
+
+
+@pytest.fixture(scope="class")
+def linreg_model_no_exclusion(regression_data_exclude_multiple):
+    return LinReg(df=regression_data_exclude_multiple,
+                  outcome="outcome",
+                  independent=["independent1",
+                               "independent2",
+                               "independent3"])
+
+
+@pytest.fixture(scope="class")
+def sm_model_no_exclusion(regression_data_exclude_multiple):
+    x = regression_data_exclude_multiple[['independent1',
+                                          'independent2',
+                                          'independent3']]
+    y = regression_data_exclude_multiple['outcome']
+    x = sm.add_constant(x)
+    return sm.OLS(y, x).fit()
+
+
+class TestRegressionNoExclusion:
+
+    def test_coefficients(self, linreg_model_no_exclusion, sm_model_no_exclusion):
+        np.testing.assert_allclose(linreg_model_no_exclusion.coefficients,
+                                   sm_model_no_exclusion.params,
+                                   atol=1e-1)
+
+    def test_standard_errors(self, linreg_model_no_exclusion, sm_model_no_exclusion):
+        np.testing.assert_allclose(linreg_model_no_exclusion.standard_errors,
+                                   sm_model_no_exclusion.bse,
+                                   atol=1e-1)
+
+
+@pytest.fixture(scope="class")
+def linreg_model_exclude_all(regression_data_exclude_multiple):
+    return LinReg(df=regression_data_exclude_multiple,
+                  outcome="outcome",
+                  independent=["~independent1",
+                               "~independent2",
+                               "~independent3"])
+
+
+class TestRegressionExcludeAll:
+
+    def test_linreg_model_exclude_nonexistent_raises_error(self, regression_data_exclude_multiple):
+        with pytest.raises(ValueError) as excinfo:
+            LinReg(df=regression_data_exclude_multiple,
+                   outcome="outcome",
+                   independent=["~independent1", "~independent2", "~independent3"])
+        assert 'Oops, you cant exclude all columns from your data.' in str(excinfo.value)
+
+
+@pytest.fixture(scope="class")
+def linreg_model_exclude_nonexistent(regression_data_exclude_multiple):
+    return LinReg(df=regression_data_exclude_multiple,
+                  outcome="outcome",
+                  independent=["~nonexistent",
+                               "independent1",
+                               "independent2",
+                               "independent3"])
+
+
+class TestRegressionExcludeNonexistent:
+
+    def test_linreg_model_exclude_nonexistent_raises_error(self, regression_data_exclude_multiple):
+        with pytest.raises(ValueError) as excinfo:
+            LinReg(df=regression_data_exclude_multiple,
+                   outcome="outcome",
+                   independent=["~nonexistent", "independent1", "independent2", "independent3"])
+        assert "Oops, nonexistent is not a column in your data. Check if youve made a typo." in str(excinfo.value)
+

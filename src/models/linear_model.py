@@ -12,6 +12,7 @@ class LinearModel(ABC):
         self.data = df
         self.outcome = outcome
         self.independent_vars = independent
+        print(self.independent_vars)
         self.intercept = intercept
         self.dependent_data = self.data[self.outcome].values
         self.obs = len(self.data)
@@ -42,19 +43,44 @@ class LinearModel(ABC):
     def _parse_independent_vars(self):
         """
         Parse the independent variables to the correct format.
+        potential variables: ['*', ':', '.', '~', '^']
         """
-        for variable in self.independent_vars:
+        if any(char in var for var in self.independent_vars for char in ['*', ':', '.', '~', '^']):
 
-            if '*' in self.independent_vars:
+            if any('*' in var for var in self.independent_vars):
+                print('using * operator')
                 self._set_all_operator()
-            else:
-                self.independent_data = self.data[self.independent_vars].values
+
+            elif any('~' in var for var in self.independent_vars):
+                print('using ~ operator')
+                print(self.independent_vars)
+                self._set_not_operator()
+        else:
+            print('using normal operator')
+            self.independent_data = self.data[self.independent_vars].values
 
     def _set_all_operator(self):
         """
         Use all columns except for the outcome as independent variables.
         """
         self.independent_vars = [col for col in self.data.columns if col != self.outcome]
+        self.independent_data = self.data[self.independent_vars].values
+
+    def _set_not_operator(self):
+        """
+        Use all columns from self.data.columns as independent variables,
+        except those that are equal to self.outcome or have a prefix '~' in self.independent_vars.
+        """
+        excluded_vars = {var.lstrip('~') for var in self.independent_vars if var.startswith('~')}
+
+        for var in excluded_vars:
+            if var not in self.data.columns:
+                raise ValueError(f'Oops, {var} is not a column in your data. Check if youve made a typo.')
+
+        if len(excluded_vars) == len(self.data.columns) - 1:
+            raise ValueError('Oops, you cant exclude all columns from your data.')
+
+        self.independent_vars = [col for col in self.data.columns if col != self.outcome and col not in excluded_vars]
         self.independent_data = self.data[self.independent_vars].values
 
     def _add_intercept(self, x):
