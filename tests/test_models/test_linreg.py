@@ -526,7 +526,7 @@ class TestRegressionExcludeNonexistent:
 @pytest.fixture(scope="class")
 def data_with_base_variable():
     """DataFrame with a base variable already present"""
-    np.random.seed(42)
+    np.random.seed(69)
     x = np.random.randn(50)
     y = 2 * x + np.random.randn(50)
     data = pd.DataFrame({'x': x, 'y': y})
@@ -536,7 +536,7 @@ def data_with_base_variable():
 @pytest.fixture(scope="class")
 def data_without_base_variable():
     """DataFrame without the base variable present"""
-    np.random.seed(42)
+    np.random.seed(69)
     y = np.random.randn(50)
     data = pd.DataFrame({'y': y})
     return data
@@ -584,3 +584,69 @@ class TestModelWithTransformationBadChar:
                    outcome="y",
                    independent=["x^i"])
         assert f"Invalid exponent 'i' in variable 'x^i'. Check for a typo." in str(excinfo.value)
+
+
+@pytest.fixture(scope="class")
+def data_with_variables():
+    """DataFrame with required variables for interaction"""
+    np.random.seed(69)
+    x = np.random.randn(50)
+    z = np.random.randn(50)
+    y = 2 * x + 3 * z + np.random.randn(50)
+    data = pd.DataFrame({'x': x, 'z': z, 'y': y})
+    return data
+
+
+@pytest.fixture(scope="class")
+def data_missing_variables():
+    """DataFrame missing one or more required variables for interaction"""
+    np.random.seed(69)
+    z = np.random.randn(50)
+    y = 3 * z + np.random.randn(50)
+    data = pd.DataFrame({'z': z, 'y': y})
+    return data
+
+
+class TestBasicInteractionOperator:
+
+    def test_interaction_created(self, data_with_variables):
+        model = LinReg(df=data_with_variables,
+                       outcome="y",
+                       independent=["x", "z", "x:z"])
+
+        assert 'x:z' in model.data.columns
+        assert 'x:z' in model.independent_vars
+
+    def test_raises_error_missing_variable(self, data_missing_variables):
+
+        with pytest.raises(ValueError) as excinfo:
+            LinReg(df=data_missing_variables,
+                   outcome="y",
+                   independent=["x", "z", "x:z"])
+
+        assert "Variable 'x' not found in DataFrame." in str(excinfo.value)
+
+
+class TestAdvancedInteractionOperator:
+
+    def test_interaction_and_individual_vars_created(self, data_with_variables):
+        model = LinReg(df=data_with_variables,
+                       outcome="y",
+                       independent=["x", "z", "x*z"])
+
+        assert 'x' in model.data.columns and 'z' in model.data.columns
+        assert 'x*z' in model.data.columns
+        assert 'x*z' in model.independent_vars
+        assert 'x' in model.independent_vars and 'z' in model.independent_vars
+
+    def test_raises_error_missing_variable(self, data_missing_variables):
+
+        with pytest.raises(ValueError) as excinfo:
+            LinReg(df=data_missing_variables,
+                   outcome="y",
+                   independent=["x", "z", "x*z"])
+        assert "Variable 'x' not found in DataFrame." in str(excinfo.value)
+
+
+
+

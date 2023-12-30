@@ -156,17 +156,15 @@ class LinearModel(ABC):
         for var in self.independent_vars:
             if '*' in var:
                 var1, var2 = var.split('*')
-                # Validate existence of variables in DataFrame
+
                 if var1 not in self.data.columns:
                     raise ValueError(f"Variable '{var1}' not found in DataFrame. Check for a typo in '{var}'.")
                 if var2 not in self.data.columns:
                     raise ValueError(f"Variable '{var2}' not found in DataFrame. Check for a typo in '{var}'.")
 
-                # Add individual variables
                 new_vars.add(var1)
                 new_vars.add(var2)
 
-                # Create and add interaction term
                 transformed_col_name = f"{var1}*{var2}"
                 self.data[transformed_col_name] = self.data[var1] * self.data[var2]
                 new_vars.add(transformed_col_name)
@@ -175,8 +173,6 @@ class LinearModel(ABC):
 
         self.independent_vars = list(new_vars)
         self.independent_data = self.data[self.independent_vars].values
-
-
 
     def _add_intercept(self, x):
         """
