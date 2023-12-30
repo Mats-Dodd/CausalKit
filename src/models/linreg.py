@@ -17,32 +17,33 @@ class LinReg(LinearModel):
                  intercept: bool = True,
                  standard_error_type: str = 'non-robust'):
 
+        """
+        Initialize the LinReg model.
+
+        Parameters:
+        df (pd.DataFrame): The dataframe containing the data.
+        outcome (str): The name of the outcome column.
+        independent (list): A list of names of independent variables.
+        intercept (bool): Whether to include an intercept in the model.
+        standard_error_type (str): The type of standard error calculation.
+        """
+
         self.standard_error_type = standard_error_type
         super().__init__(df,
                          outcome,
                          independent,
                          intercept)
 
-        self.rss = None
-        self.tss = None
-        self.r_squared = None
-        self.adj_r_squared = None
-        self.log_likelihood = None
-        self.aic = None
-        self.bic = None
-        self.adj_aic = None
-        self.adj_bic = None
-        self.f_stat = None
-        self.f_stat_p_value = None
-        self.standard_errors = None
-        self.t_stats = None
-        self.p_values = None
-        self.conf_int = None
-        self.summary_data_coefficients = None
-        self.summary_data_model = None
-        self.table = None
-
+        self._initialize_metrics()
         self._fit()
+
+    def _initialize_metrics(self):
+        """ Initialize all metrics to None. """
+        self.rss = self.tss = self.r_squared = self.adj_r_squared = None
+        self.log_likelihood = self.aic = self.bic = self.adj_aic = self.adj_bic = None
+        self.f_stat = self.f_stat_p_value = None
+        self.standard_errors = self.t_stats = self.p_values = self.conf_int = None
+        self.summary_data_coefficients = self.summary_data_model = self.table = None
 
     def _fit(self):
         self._fit_coefficients()
