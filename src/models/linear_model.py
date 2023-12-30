@@ -12,7 +12,6 @@ class LinearModel(ABC):
         self.data = df
         self.outcome = outcome
         self.independent_vars = independent
-        print(self.independent_vars)
         self.intercept = intercept
         self.dependent_data = self.data[self.outcome].values
         self.obs = len(self.data)
@@ -50,9 +49,13 @@ class LinearModel(ABC):
         '*': interaction between those two + their normal values,
         '^': to the power of the number after the '^'
         """
-        if any(char in var for var in self.independent_vars for char in ['.', ':', '.', '!', '^']):
+        if any(char in var for var in self.independent_vars for char in ['.', ':', '*', '!', '^']):
+
             contains_caret = any('^' in var for var in self.independent_vars)
+            contains_colon = any(':' in var for var in self.independent_vars)
             contains_no_star_or_colon = all('*' not in var and ':' not in var for var in self.independent_vars)
+            contains_no_caret = all('^' not in var for var in self.independent_vars)
+            contains_colon_or_star = any('*' in var or ':' in var for var in self.independent_vars)
             if any('.' in var for var in self.independent_vars):
                 self._set_all_operator()
 
@@ -60,7 +63,14 @@ class LinearModel(ABC):
                 self._set_not_operator()
 
             elif contains_caret and contains_no_star_or_colon:
-                self._set_power_operator()
+                self._set_polynomial_operator()
+
+            elif contains_no_caret and contains_colon_or_star:
+
+                if contains_colon:
+                    self._set_basic_interaction_operator()
+                else:
+                    self._set_advanced_interaction_operator()
 
         else:
 
@@ -90,11 +100,11 @@ class LinearModel(ABC):
         self.independent_vars = [col for col in self.data.columns if col != self.outcome and col not in excluded_vars]
         self.independent_data = self.data[self.independent_vars].values
 
-    def _set_power_operator(self):
+    def _set_polynomial_operator(self):
         """
         Set the independent variables to the power of the number after the '^' and also include all lower powers.
         """
-        new_vars = set()  # Using a set to avoid duplicates
+        new_vars = set()
         for var in self.independent_vars:
             if '^' in var:
                 base_var, exponent_str = var.split('^')
@@ -115,6 +125,57 @@ class LinearModel(ABC):
 
         self.independent_vars = list(new_vars)
         self.independent_data = self.data[self.independent_vars].values
+
+    def _set_basic_interaction_operator(self):
+        """
+        Set the interaction between those specific variables.
+        """
+        new_vars = set()
+        for var in self.independent_vars:
+            if ':' in var:
+                var1, var2 = var.split(':')
+                if var1 not in self.data.columns:
+                    raise ValueError(f"Variable '{var1}' not found in DataFrame. Check for a typo in '{var}'.")
+                if var2 not in self.data.columns:
+                    raise ValueError(f"Variable '{var2}' not found in DataFrame. Check for a typo in '{var}'.")
+
+                transformed_col_name = f"{var1}:{var2}"
+                self.data[transformed_col_name] = self.data[var1] * self.data[var2]
+                new_vars.add(transformed_col_name)
+            else:
+                new_vars.add(var)
+
+        self.independent_vars = list(new_vars)
+        self.independent_data = self.data[self.independent_vars].values
+
+    def _set_advanced_interaction_operator(self):
+        """
+        Set the interaction between two variables and include their individual terms.
+        """
+        new_vars = set()
+        for var in self.independent_vars:
+            if '*' in var:
+                var1, var2 = var.split('*')
+                # Validate existence of variables in DataFrame
+                if var1 not in self.data.columns:
+                    raise ValueError(f"Variable '{var1}' not found in DataFrame. Check for a typo in '{var}'.")
+                if var2 not in self.data.columns:
+                    raise ValueError(f"Variable '{var2}' not found in DataFrame. Check for a typo in '{var}'.")
+
+                # Add individual variables
+                new_vars.add(var1)
+                new_vars.add(var2)
+
+                # Create and add interaction term
+                transformed_col_name = f"{var1}*{var2}"
+                self.data[transformed_col_name] = self.data[var1] * self.data[var2]
+                new_vars.add(transformed_col_name)
+            else:
+                new_vars.add(var)
+
+        self.independent_vars = list(new_vars)
+        self.independent_data = self.data[self.independent_vars].values
+
 
 
     def _add_intercept(self, x):
