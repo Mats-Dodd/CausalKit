@@ -3,29 +3,26 @@ import pandas as pd
 import scipy.stats as stats
 from IPython.display import display, HTML
 
+from src.models.linear_model import LinearModel
 
-class LinReg:
 
-    """ Class to represent a Linear Regression model"""
+class LinReg(LinearModel):
+
+    """ Class to represent a Linear Regression model """
 
     def __init__(self,
                  df: pd.DataFrame,
                  outcome: str,
                  independent: list,
                  intercept: bool = True,
-                 standard_error_type: str = ['non-robust', 'robust', 'clustered'][0]):
-        self.data = df
-        self.outcome = outcome
-        self.independent_vars = independent
-        self.independent_data = self.data[self.independent_vars].values
-        self.dependent_data = self.data[self.outcome].values
-        self.intercept = intercept
+                 standard_error_type: str = 'non-robust'):
+
         self.standard_error_type = standard_error_type
-        self.n_regs = len(independent)
-        self.obs = len(self.data)
-        self.degrees_of_freedom = self.obs - self.n_regs - (1 if self.intercept else 0)
-        self.k = self.n_regs + (1 if self.intercept else 0)
-        self.coefficients = None
+        super().__init__(df,
+                         outcome,
+                         independent,
+                         intercept)
+
         self.rss = None
         self.tss = None
         self.r_squared = None
@@ -47,6 +44,26 @@ class LinReg:
 
         self._fit()
 
+    def _fit(self):
+        self._fit_coefficients()
+        self._residual_sum_of_squares()
+        self._total_sum_of_squares()
+        self._r_squared()
+        self._adjusted_r_squared()
+        self._log_likelihood()
+        self._aic()
+        self._bic()
+        self._adjusted_aic()
+        self._adjusted_bic()
+        self._f_statistic()
+        self._f_statistic_p_value()
+        self._fit_standard_errors()
+        self._fit_t_statistic()
+        self._fit_p_values()
+        self._fit_conf_int()
+        self._set_summary_data()
+        self._set_table()
+
     def _add_intercept(self, x):
         if self.intercept:
 
@@ -62,26 +79,6 @@ class LinReg:
         y = self.dependent_data
 
         self.coefficients = np.linalg.lstsq(x, y, rcond=None)[0]
-
-    def _fit(self):
-        self._fit_coefficients()
-        self._residual_sum_of_squares()
-        self._total_sum_of_squares()
-        self._r_squared()
-        self._adjusted_r_squared()
-        self._log_likelihood()
-        self._aic()
-        self._bic()
-        self._adjusted_aic()
-        self._adjusted_bic()
-        self.f_statistic()
-        self.f_statistic_p_value()
-        self._fit_standard_errors()
-        self._fit_t_statistic()
-        self._fit_p_values()
-        self._fit_conf_int()
-        self.set_summary_data()
-        self.set_table()
 
     def predict(self, x_new):
         if not isinstance(x_new, np.ndarray):
@@ -136,10 +133,10 @@ class LinReg:
         bic = self.bic
         self.adj_bic = bic + np.log(self.obs) * (self.n_regs + 1) * (self.n_regs + 2) / (self.obs - self.n_regs - 2)
 
-    def f_statistic(self):
+    def _f_statistic(self):
         self.f_stat = (self.tss - self.rss) / self.n_regs / (self.rss / self.degrees_of_freedom)
 
-    def f_statistic_p_value(self):
+    def _f_statistic_p_value(self):
         p = self.n_regs
         df1 = p
         df2 = self.obs - p - (1 if self.intercept else 0)
@@ -184,7 +181,7 @@ class LinReg:
 
         self.conf_int = [[lower, upper] for lower, upper in zip(lower_bounds, upper_bounds)]
 
-    def set_summary_data(self):
+    def _set_summary_data(self):
         self.summary_data_coefficients = {
             'Variable': ['Intercept'] + self.independent_vars,
             'Coefficient': [round(num, 3) for num in self.coefficients],
@@ -210,7 +207,7 @@ class LinReg:
 
         }
 
-    def set_table(self):
+    def _set_table(self):
         data = self.summary_data_coefficients.copy()
         data['Lower Bound'] = [ci[0] for ci in data['Conf. Interval']]
         data['Upper Bound'] = [ci[1] for ci in data['Conf. Interval']]
@@ -549,7 +546,6 @@ class LinReg:
                 html += "</div>"
 
             html += "</div>"
-
 
         else:
             html = "<h1 style='text-align:center;'>Regression Results</h1><pre style='text-align:center; font-family:monospace;'>"
