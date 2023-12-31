@@ -23,9 +23,7 @@ pip install causalkit
 
 Things to implement:
 
-1. heterogeneuous treatment effects with * or : operator between variables (e.g. x1:x2), allow for multiple variables
-2. add quadratic terms with ^ operator (e.g. x1^2)
-2. fixed effects, not displaying all the coefficients that are fixed in summary
+1. fixed effects, not displaying all the coefficients that are fixed in summary
 3. allow fixed effects to work with categorical variables use traffic fatalities from 271
 4. add IV Regression use angrist data as example
 5. add t test

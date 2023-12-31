@@ -125,7 +125,7 @@ class LinearModel(ABC):
                 if base_var not in self.data.columns:
                     raise ValueError(f"Base variable '{base_var}' not found in DataFrame. Check for a typo in '{var}'.")
 
-                for exponent in range(2, max_exponent + 1):
+                for exponent in range(1, max_exponent + 1):
                     transformed_col_name = f"{base_var}^{exponent}"
                     self.data[transformed_col_name] = self.data[base_var] ** exponent
                     new_vars.add(transformed_col_name)

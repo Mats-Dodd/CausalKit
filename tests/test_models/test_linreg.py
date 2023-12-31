@@ -558,10 +558,12 @@ def model_with_transformation_missing_base(data_without_base_variable):
 
 class TestModelWithTransformation:
     def test_independent_vars_include_transformed(self, model_with_transformation):
+        assert "x^1" in model_with_transformation.independent_vars
         assert "x^2" in model_with_transformation.independent_vars
         assert "x^3" in model_with_transformation.independent_vars
 
     def test_data_includes_transformed_columns(self, model_with_transformation):
+        assert "x^1" in model_with_transformation.data.columns
         assert "x^2" in model_with_transformation.data.columns
         assert "x^3" in model_with_transformation.data.columns
 
@@ -646,6 +648,7 @@ class TestAdvancedInteractionOperator:
                    outcome="y",
                    independent=["x", "z", "x*z"])
         assert "Variable 'x' not found in DataFrame." in str(excinfo.value)
+
 
 
 
