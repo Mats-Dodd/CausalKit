@@ -44,7 +44,6 @@ class LinReg(LinearModel):
         self.f_stat = self.f_stat_p_value = None
         self.standard_errors = self.t_stats = self.p_values = self.conf_int = None
         self.summary_data_coefficients = self.summary_data_model = self.table = None
-        self.fixed = None
 
     def _fit(self):
         self._fit_coefficients()
@@ -160,10 +159,6 @@ class LinReg(LinearModel):
             s = np.diag(residuals ** 2)
             robust_variance = xtx_inv @ (x.T @ s @ x) @ xtx_inv
             self.standard_errors = np.sqrt(np.diag(robust_variance))
-
-        elif self.standard_error_type == 'clustered':
-            """TODO: Implement clustered standard errors"""
-            pass
 
     def _fit_t_statistic(self):
 

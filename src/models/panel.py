@@ -60,6 +60,41 @@ class FixedEffects(LinReg):
         self._add_fixed_effects()
         super()._fit()
 
+    def _fit_standard_errors(self):
+        x = self.independent_data
+        if self.intercept:
+            x = self._add_intercept(x)
+
+        error_variance = self.rss / self.degrees_of_freedom
+        xtx_inv = np.linalg.pinv(x.T @ x)
+
+        if self.standard_error_type == 'non-robust':
+            self.standard_errors = np.sqrt(error_variance * np.diag(xtx_inv))
+
+        elif self.standard_error_type == 'robust':
+            residuals = self.residuals()
+            s = np.diag(residuals ** 2)
+            robust_variance = xtx_inv @ (x.T @ s @ x) @ xtx_inv
+            self.standard_errors = np.sqrt(np.diag(robust_variance))
+
+        if self.standard_error_type == 'clustered':
+            if self.fixed_vars is None:
+                raise ValueError("Cluster variable not specified for clustered standard errors.")
+
+            residuals = self.residuals()
+            sum_sq_grouped_errors = np.zeros((x.shape[1], x.shape[1]))
+
+            # Group by the cluster variables and iterate over each group
+            grouped_data = self.data.groupby(self.fixed_vars)
+            for _, group in grouped_data:
+                group_idx = group.index
+                xi = x[group_idx]
+                ri = residuals[group_idx].values.reshape(-1, 1)  # Corrected line
+                sum_sq_grouped_errors += xi.T @ ri @ ri.T @ xi
+
+            clustered_variance = np.linalg.pinv(x.T @ x) @ sum_sq_grouped_errors @ np.linalg.pinv(x.T @ x)
+            self.standard_errors = np.sqrt(np.diag(clustered_variance))
+
     def _set_summary_data(self):
         # Call the base method to initialize summary data
         super()._set_summary_data()
