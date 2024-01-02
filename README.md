@@ -23,10 +23,9 @@ pip install causalkit
 
 Things to implement:
 
-3. demo fixed effects on  traffic fatalities from 271 and on which data
+
 4. add IV Regression use angrist data as example
 5. add t test
-6. add f test
 7. add random effect and mixed effects models
 8. add model diagnostics + assumption checks (linearity, normality of residuals, homoscedasticity, and absence of multicollinearity. This could include plots (like QQ plots, residual vs. fitted value plots) and statistical tests.)
 9. Regularization (Lasso, Ridge, Elastic Net)

@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import scipy.stats as stats
 from IPython.display import display, HTML
 
 from src.models.linreg import LinReg
@@ -34,6 +33,7 @@ class FixedEffects(LinReg):
         self.fixed_vars = fixed
         self.model_type = 'Fixed Effects'
         self.dummy_cols = []
+        self.fixed_effects_added = False
         super().__init__(df, outcome, independent, intercept, standard_error_type)
 
     def _add_fixed_effects(self):
@@ -49,15 +49,13 @@ class FixedEffects(LinReg):
             self.data = pd.concat([self.data, dummies], axis=1)
         self.independent_vars.extend(self.dummy_cols)
         self.independent_data = self.data[self.independent_vars]
+        self.fixed_effects_added = True
 
     def _fit(self):
-        """
-        Fit the model. Overriding to include fixed effects.
-        """
-        if len(self.fixed_vars) < 1:
-            raise ValueError(f"You have not specified any levels to fix by.  Look at adding a 'fixed' parameter.")
-
-        self._add_fixed_effects()
+        if not self.fixed_effects_added:
+            if len(self.fixed_vars) < 1:
+                raise ValueError("You have not specified any levels to fix by. Look at adding a 'fixed' parameter.")
+            self._add_fixed_effects()
         super()._fit()
 
     def _fit_standard_errors(self):
@@ -84,22 +82,20 @@ class FixedEffects(LinReg):
             residuals = self.residuals()
             sum_sq_grouped_errors = np.zeros((x.shape[1], x.shape[1]))
 
-            # Group by the cluster variables and iterate over each group
             grouped_data = self.data.groupby(self.fixed_vars)
             for _, group in grouped_data:
                 group_idx = group.index
                 xi = x[group_idx]
-                ri = residuals[group_idx].values.reshape(-1, 1)  # Corrected line
+                ri = residuals[group_idx].values.reshape(-1, 1)
                 sum_sq_grouped_errors += xi.T @ ri @ ri.T @ xi
 
             clustered_variance = np.linalg.pinv(x.T @ x) @ sum_sq_grouped_errors @ np.linalg.pinv(x.T @ x)
             self.standard_errors = np.sqrt(np.diag(clustered_variance))
 
     def _set_summary_data(self):
-        # Call the base method to initialize summary data
+
         super()._set_summary_data()
 
-        # Filter the data for non-dummy variables
         non_dummy_data = {
             key: [] for key in self.summary_data_coefficients
         }
@@ -115,7 +111,7 @@ class FixedEffects(LinReg):
                 for key in dummy_data:
                     dummy_data[key].append(self.summary_data_coefficients[key][i])
 
-        # Update the class attributes
+
         self.summary_data_coefficients = non_dummy_data
         self.summary_data_dummies = dummy_data
 
@@ -495,18 +491,14 @@ class FixedEffects(LinReg):
                 html += "<pre style='text-align:center; font-family:monospace;'>\n"
 
                 dummy_data = self.summary_data_dummies
-                # Find the maximum length of the content for each column
                 column_widths_dummy = {key: max(len(key), max(len(str(val)) for val in dummy_data[key])) + 2 for key in dummy_data.keys()}  # add 2 for padding
 
-                # Create the header line
                 header_line_dummy = ' '.join(key.center(column_widths_dummy[key]) for key in dummy_data.keys())
                 html += header_line_dummy + "\n"
 
-                # Create the separator line
                 separator_dummy = ' '.join('-' * column_widths_dummy[key] for key in dummy_data.keys())
                 html += separator_dummy + "\n"
 
-                # Format each row of the dummy data
                 for i in range(len(dummy_data['Variable'])):
                     row = []
                     for key in dummy_data.keys():
