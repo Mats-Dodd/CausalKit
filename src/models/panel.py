@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import scipy.stats as stats
 from IPython.display import display, HTML
 
 from src.models.linreg import LinReg
@@ -33,14 +34,12 @@ class FixedEffects(LinReg):
         self.fixed_vars = fixed
         self.model_type = 'Fixed Effects'
         self.dummy_cols = []
-        self.fixed_effects_added = False
         super().__init__(df, outcome, independent, intercept, standard_error_type)
 
     def _add_fixed_effects(self):
         """
         Add dummy variables for each category in each fixed effect variable.
         """
-
         for level in self.fixed_vars:
             if level not in self.data.columns:
                 raise ValueError(f"{level} is not a column in the data provided.")
@@ -50,16 +49,15 @@ class FixedEffects(LinReg):
             self.data = pd.concat([self.data, dummies], axis=1)
         self.independent_vars.extend(self.dummy_cols)
         self.independent_data = self.data[self.independent_vars]
-        self.fixed_effects_added = True
 
     def _fit(self):
         """
         Fit the model. Overriding to include fixed effects.
         """
-        if not self.fixed_effects_added:
-            if len(self.fixed_vars) < 1:
-                raise ValueError("You have not specified any levels to fix by. Look at adding a 'fixed' parameter.")
-            self._add_fixed_effects()
+        if len(self.fixed_vars) < 1:
+            raise ValueError(f"You have not specified any levels to fix by.  Look at adding a 'fixed' parameter.")
+
+        self._add_fixed_effects()
         super()._fit()
 
     def _fit_standard_errors(self):
@@ -522,6 +520,4 @@ class FixedEffects(LinReg):
                 html += "</pre>\n"
 
         return display(HTML(html))
-
-
 
