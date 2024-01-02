@@ -35,6 +35,7 @@ class LinearModel(ABC):
         Set additional attributes based on the independent variables.
         """
         self._parse_independent_vars()
+        self.independent_vars = list(set(self.independent_vars))
         self.n_regs = len(self.independent_vars)
         self.degrees_of_freedom = self.obs - self.n_regs - (1 if self.intercept else 0)
         self.k = self.n_regs + (1 if self.intercept else 0)
@@ -259,8 +260,6 @@ class LinearModel(ABC):
 
         self.independent_vars = list(new_vars)
         self.independent_data = self.data[self.independent_vars].values
-
-
 
     def _add_intercept(self, x):
         """
