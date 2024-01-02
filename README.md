@@ -23,8 +23,7 @@ pip install causalkit
 
 Things to implement:
 
-1. fixed effects, not displaying all the coefficients that are fixed in summary
-3. allow fixed effects to work with categorical variables use traffic fatalities from 271
+3. demo fixed effects on  traffic fatalities from 271 and on which data
 4. add IV Regression use angrist data as example
 5. add t test
 6. add f test
