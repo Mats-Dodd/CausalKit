@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import scipy.stats as stats
 
 from src.models.linear_model import LinearModel
@@ -32,11 +33,20 @@ def f_test(model1, model2):
         model_2_regs = model2.n_regs
 
     dfn = model_2_regs - model_1_regs
-    dfd = model1.obs - model_2_regs
+    dfd = model1.obs - model_2_regs - 1
 
     f_stat = ((rss_restricted - rss_unrestricted) / dfn) / (rss_unrestricted / dfd)
     p_value = 1 - stats.f.cdf(f_stat, dfn, dfd)
 
-    return f_stat, dfn, dfd, p_value
+    results = pd.DataFrame({
+        'F-Statistic': [f_stat],
+        'DFN': [dfn],
+        'DFD': [dfd],
+        'p-value': [p_value]
+    })
+    print("F-Test Results for significance of add effects")
+    print("==============================================")
+    print("Alternative Hypothesis: Added covariates are significant")
+    return results
 
 #%%
