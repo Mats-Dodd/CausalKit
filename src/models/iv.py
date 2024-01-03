@@ -35,6 +35,7 @@ class IV(LinReg):
         self.model_type = 'Instrumental Variables'
         self.first_stage_model = None
         self.second_stage_model = None
+        self.standard_error_type = standard_error_type
         super().__init__(df, outcome, independent, intercept, standard_error_type)
 
     def _first_stage(self):
@@ -46,7 +47,8 @@ class IV(LinReg):
         independent = self.instruments + self.controls
         self.first_stage_model = LinReg(df=df,
                                         outcome=outcome,
-                                        independent=independent)
+                                        independent=independent,
+                                        standard_error_type=self.standard_error_type)
 
     def _second_stage(self):
         """
@@ -59,7 +61,8 @@ class IV(LinReg):
         independent = ['independent_hat'] + self.controls
         self.second_stage_model = LinReg(second_stage_df,
                                          self.outcome,
-                                         independent)
+                                         independent,
+                                         standard_error_type=self.standard_error_type)
 
     def _fit(self):
         """
