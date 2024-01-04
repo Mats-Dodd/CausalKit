@@ -35,6 +35,7 @@ class LinReg(LinearModel):
                          intercept)
 
         self._initialize_metrics()
+
         self._fit()
 
     def _initialize_metrics(self):

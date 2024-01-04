@@ -57,7 +57,7 @@ def fe_model_two_way(panel_data):
                         outcome='outcome',
                         independent=['independent'],
                         fixed=['year', 'id'],
-                        standard_error_type='clustered')
+                        standard_error_type='two-way-clustered')
 
 
 class TestFixedEffectsOneWay:
