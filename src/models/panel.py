@@ -34,6 +34,7 @@ class FixedEffects(LinReg):
         self.model_type = 'Fixed Effects'
         self.dummy_cols = []
         self.fixed_effects_added = False
+
         super().__init__(df, outcome, independent, intercept, standard_error_type)
 
     def _add_fixed_effects(self):
@@ -56,15 +57,30 @@ class FixedEffects(LinReg):
             if len(self.fixed_vars) < 1:
                 raise ValueError("You have not specified any levels to fix by. Look at adding a 'fixed' parameter.")
             self._add_fixed_effects()
-        super()._fit()
+        self._fit_coefficients()
+        self._residual_sum_of_squares()
+        self._total_sum_of_squares()
+        self._r_squared()
+        self._adjusted_r_squared()
+        self._log_likelihood()
+        self._aic()
+        self._bic()
+        self._adjusted_aic()
+        self._adjusted_bic()
+        self._f_statistic()
+        self._f_statistic_p_value()
+        self._fit_standard_errors()
+        self._fit_t_statistic()
+        self._fit_p_values()
+        self._fit_conf_int()
+        self._set_summary_data()
+        self._set_table()
 
     def _fit_standard_errors(self):
-        x = self.independent_data
-        if self.intercept:
-            x = self._add_intercept(x)
-
-        error_variance = self.rss / self.degrees_of_freedom
+        x = self._add_intercept(self.independent_data) if self.intercept else self.independent_data
+        residuals = self.residuals()
         xtx_inv = np.linalg.pinv(x.T @ x)
+        error_variance = self.rss / self.degrees_of_freedom
 
         if self.standard_error_type == 'non-robust':
             self.standard_errors = np.sqrt(error_variance * np.diag(xtx_inv))
@@ -76,21 +92,62 @@ class FixedEffects(LinReg):
             self.standard_errors = np.sqrt(np.diag(robust_variance))
 
         if self.standard_error_type == 'clustered':
-            if self.fixed_vars is None:
+            if not self.fixed_vars:
                 raise ValueError("Cluster variable not specified for clustered standard errors.")
 
-            residuals = self.residuals()
+            if len(self.fixed_vars) > 1:
+                raise ValueError("Only one clustering variable are allowed for one-way clustered standard errors.")
+
+            cluster_var = self.fixed_vars[0]
+            clusters = self.data[cluster_var].unique()
             sum_sq_grouped_errors = np.zeros((x.shape[1], x.shape[1]))
 
-            grouped_data = self.data.groupby(self.fixed_vars)
-            for _, group in grouped_data:
-                group_idx = group.index
-                xi = x[group_idx]
-                ri = residuals[group_idx].values.reshape(-1, 1)
+            for cluster in clusters:
+                cluster_idx = self.data[cluster_var] == cluster
+                xi = x[cluster_idx]
+                ri = residuals[cluster_idx].to_numpy().reshape(-1, 1)
                 sum_sq_grouped_errors += xi.T @ ri @ ri.T @ xi
 
-            clustered_variance = np.linalg.pinv(x.T @ x) @ sum_sq_grouped_errors @ np.linalg.pinv(x.T @ x)
+            clustered_variance = xtx_inv @ sum_sq_grouped_errors @ xtx_inv
             self.standard_errors = np.sqrt(np.diag(clustered_variance))
+            self.standard_errors_computed = True
+
+        elif self.standard_error_type == 'two-way-clustered':
+            if len(self.fixed_vars) != 2:
+                raise ValueError("Two clustering variables are required for two-way clustered standard errors.")
+
+            cluster_vars = self.fixed_vars
+            clusters1 = self.data[cluster_vars[0]].unique()
+            clusters2 = self.data[cluster_vars[1]].unique()
+            sum_sq_grouped_errors = np.zeros((x.shape[1], x.shape[1]))
+
+            for cluster in clusters1:
+                cluster_idx = self.data[cluster_vars[0]] == cluster
+                xi = x[cluster_idx]
+                ri = residuals[cluster_idx].to_numpy().reshape(-1, 1)
+                sum_sq_grouped_errors += xi.T @ ri @ ri.T @ xi
+
+            for cluster in clusters2:
+                cluster_idx = self.data[cluster_vars[1]] == cluster
+                xi = x[cluster_idx]
+                ri = residuals[cluster_idx].to_numpy().reshape(-1, 1)
+                sum_sq_grouped_errors += xi.T @ ri @ ri.T @ xi
+
+            cross_terms = np.zeros((x.shape[1], x.shape[1]))
+            for cluster1 in clusters1:
+                for cluster2 in clusters2:
+                    cluster_idx = (self.data[cluster_vars[0]] == cluster1) & (self.data[cluster_vars[1]] == cluster2)
+                    xi = x[cluster_idx]
+                    ri = residuals[cluster_idx].to_numpy().reshape(-1, 1)
+                    cross_terms += xi.T @ ri @ ri.T @ xi
+
+            sum_sq_grouped_errors = sum_sq_grouped_errors - cross_terms + xtx_inv
+
+            clustered_variance_2 = xtx_inv @ sum_sq_grouped_errors @ xtx_inv
+
+            adjusted_variance = np.diag(clustered_variance_2) + 1e-10
+
+            self.standard_errors = np.sqrt(adjusted_variance)
 
     def _set_summary_data(self):
 
@@ -110,7 +167,6 @@ class FixedEffects(LinReg):
             else:
                 for key in dummy_data:
                     dummy_data[key].append(self.summary_data_coefficients[key][i])
-
 
         self.summary_data_coefficients = non_dummy_data
         self.summary_data_dummies = dummy_data

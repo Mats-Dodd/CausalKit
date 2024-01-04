@@ -154,7 +154,7 @@ class LinReg(LinearModel):
         if self.standard_error_type == 'non-robust':
             self.standard_errors = np.sqrt(error_variance * np.diag(xtx_inv))
 
-        elif self.standard_error_type == 'robust':
+        elif self.standard_error_type == 'hc0':
             residuals = self.residuals()
             s = np.diag(residuals ** 2)
             robust_variance = xtx_inv @ (x.T @ s @ x) @ xtx_inv

@@ -148,7 +148,7 @@ def linreg_model_robust(regression_data_robust):
     model = LinReg(df=regression_data_robust,
                    outcome="outcome",
                    independent=["independent"],
-                   standard_error_type='robust')
+                   standard_error_type='hc0')
     return model
 
 
