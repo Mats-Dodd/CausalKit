@@ -23,7 +23,7 @@ pip install causalkit
 
 Things to implement:
 
-
+1. add dropping of na values
 4. add IV Regression use angrist data as example
 5. add t test
 7. add random effect and mixed effects models
