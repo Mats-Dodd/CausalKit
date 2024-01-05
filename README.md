@@ -30,6 +30,6 @@ Things to implement:
 8. add model diagnostics + assumption checks (linearity, normality of residuals, homoscedasticity, and absence of multicollinearity. This could include plots (like QQ plots, residual vs. fitted value plots) and statistical tests.)
 9. Regularization (Lasso, Ridge, Elastic Net)
 10. add GLM's (logistic, poisson, negative binomial, multinomial)
-11. Bootstrap + resampling methods (jackknife, permutation tests, )
-12. add typical Causal inferenece methods (matching, regression discontinuity, difference in differences,  regression kink, synthetic control, etc.)
+11. Bootstrap + resampling methods (bootstrap se ci permutation tests, )
+12. add typical Causal inferenece methods (matching, regression discontinuity, synthetic control, etc.)
 13. interactive interaction explorer (interactive vis with sliders for continuous variables and dropdowns for categorical variables)
