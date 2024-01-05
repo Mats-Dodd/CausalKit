@@ -74,6 +74,10 @@ class IV(LinReg):
         self.summary_data_coefficients = self.second_stage_model.summary_data_coefficients
         self.summary_data_model = self.second_stage_model.summary_data_model
         self.table = self.second_stage_model.table
+        self.coefficients = self.second_stage_model.coefficients
+        self.standard_errors = self.second_stage_model.standard_errors
+        self.t_stats = self.second_stage_model.t_stats
+        self.p_values = self.second_stage_model.p_values
 
     def predict(self, x_new):
         """
