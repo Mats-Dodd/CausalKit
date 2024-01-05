@@ -51,6 +51,7 @@ class LogReg(LinearModel):
         self._fit_coefficients()
         self._fit_standard_errors()
         self._compute_wald_statistics()
+        self._compute_conf_int()
 
     def _fit_coefficients(self, iterations=10, tol=1e-6):
         x = self.independent_data
@@ -79,6 +80,7 @@ class LogReg(LinearModel):
         self.standard_errors = np.sqrt(np.diag(hessian_inv))
 
     def _compute_robust_se(self, x, y):
+        """TODO: Implement robust standard errors."""
         predictions = _sigmoid(x @ self.coefficients)
         residuals = y - predictions
 
@@ -118,6 +120,17 @@ class LogReg(LinearModel):
         """
         self.wald_stats = self.coefficients / self.standard_errors
         self.p_values = stats.norm.sf(np.abs(self.wald_stats)) * 2
+
+    def _compute_conf_int(self,  alpha=0.05):
+        """
+        Compute the 95% confidence intervals for the model coefficients.
+        """
+        z = stats.norm.ppf(1 - alpha / 2)  # z-score for 95% CI
+        lower_bounds = self.coefficients - z * self.standard_errors
+        upper_bounds = self.coefficients + z * self.standard_errors
+
+        self.conf_int = [[lower, upper] for lower, upper in zip(lower_bounds, upper_bounds)]
+
 
 
 
