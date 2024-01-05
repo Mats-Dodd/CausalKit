@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
-from src.models.linreg import LinReg
 import statsmodels.api as sm
 import pytest
+
+from src.models.linreg import LinReg
 
 
 @pytest.fixture(scope="class")

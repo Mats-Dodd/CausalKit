@@ -205,7 +205,7 @@ class LinearModel(ABC):
                 if poly_base_var not in self.data.columns:
                     raise ValueError(f"Base variable '{poly_base_var}' not found in DataFrame. Check for a typo in '{poly_var}'.")
 
-                for exponent in range(1, max_exponent + 1):  # Include the base variable itself (exponent 1)
+                for exponent in range(1, max_exponent + 1):
                     transformed_col_name = f"{base_var}:{poly_base_var}^{exponent}"
                     self.data[transformed_col_name] = self.data[base_var] * (self.data[poly_base_var] ** exponent)
                     new_vars.add(transformed_col_name)
@@ -228,7 +228,6 @@ class LinearModel(ABC):
                 if var1 not in self.data.columns:
                     raise ValueError(f"Variable '{var1}' not found in DataFrame. Check for a typo in '{var}'.")
 
-                # Check if the second variable is a polynomial
                 if '^' in poly_var:
                     poly_base_var, exponent_str = poly_var.split('^')
                     try:
@@ -239,7 +238,7 @@ class LinearModel(ABC):
                     if poly_base_var not in self.data.columns:
                         raise ValueError(f"Base variable '{poly_base_var}' not found in DataFrame. Check for a typo in '{poly_var}'.")
 
-                    for exponent in range(1, max_exponent + 1):  # Include the base variable itself
+                    for exponent in range(1, max_exponent + 1):
                         transformed_col_name = f"{var1}*{poly_base_var}^{exponent}"
                         self.data[transformed_col_name] = self.data[var1] * (self.data[poly_base_var] ** exponent)
                         new_vars.add(transformed_col_name)

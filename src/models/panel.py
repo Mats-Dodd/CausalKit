@@ -294,7 +294,6 @@ class FixedEffects(LinReg):
                     """
             html += "</div>"
 
-            # Second Column
             html += "<div class='model-column'>"
             for key, value in second_half:
                 tooltip = model_tooltips.get(key, "")
@@ -542,12 +541,11 @@ class FixedEffects(LinReg):
             html += "</pre>"
 
             if show_fixed:
-                #html += "<hr style='border-style: dashed;'>\n"
                 html += "<div style='text-align:center;'>Fixed Variables Summary</div>\n"
                 html += "<pre style='text-align:center; font-family:monospace;'>\n"
 
                 dummy_data = self.summary_data_dummies
-                column_widths_dummy = {key: max(len(key), max(len(str(val)) for val in dummy_data[key])) + 2 for key in dummy_data.keys()}  # add 2 for padding
+                column_widths_dummy = {key: max(len(key), max(len(str(val)) for val in dummy_data[key])) + 2 for key in dummy_data.keys()}
 
                 header_line_dummy = ' '.join(key.center(column_widths_dummy[key]) for key in dummy_data.keys())
                 html += header_line_dummy + "\n"
