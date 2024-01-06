@@ -81,27 +81,7 @@ class LogReg(LinearModel):
         self._set_pseudo_r_squared()
         self._set_llr_p_value()
         self._set_summary_data()
-
-    def _fit_coefficients(self, iterations=10, tol=1e-6):
-        x = self.independent_data
-        if self.intercept:
-            x = self._add_intercept(x)
-        y = self.dependent_data
-
-        self.coefficients = np.zeros(x.shape[1])
-        count = 0
-        for _ in range(iterations):
-            pred = x @ self.coefficients
-            predictions = _sigmoid(pred)
-            gradient = _compute_gradient(x, y, predictions)
-            hessian = _compute_hessian(x, predictions)
-
-            update = np.linalg.inv(hessian) @ gradient
-            self.coefficients += update
-            count += 1
-            if np.linalg.norm(update) < tol:
-                break
-        print(f'Converged in {count} iterations.')
+        self._set_table()
 
     def predict(self, x_new):
         """
@@ -136,6 +116,64 @@ class LogReg(LinearModel):
         """
         fitted = self.fitted_values()
         return self.dependent_data - fitted / np.sqrt(fitted * (1 - fitted))
+
+    def marginal_effects(self, at='mean', method='dydx'):
+        """
+        Compute marginal effects for logistic regression.
+
+        :param at: Specify whether to evaluate at 'mean' or 'median' of independent variables.
+        :param method: Specify the method to use, 'dydx' for marginal effect, 'eyex' for elasticity.
+        :return: DataFrame with marginal effects for each independent variable.
+        """
+        if at not in ['mean', 'median']:
+            raise ValueError("The 'at' parameter must be 'mean' or 'median'")
+
+        if method not in ['dydx', 'eyex']:
+            raise ValueError("The 'method' parameter must be 'dydx' or 'eyex'")
+
+        x = self.independent_data
+        if self.intercept:
+            x = self._add_intercept(x)
+
+        # Getting the mean or median values of the independent variables
+        x_at_values = np.mean(x, axis=0) if at == 'mean' else np.median(x, axis=0)
+
+        # Predict probabilities at specified values
+        prob_at_values = _sigmoid(x_at_values @ self.coefficients)
+
+        # Calculate marginal effects
+        marginal_effects = {}
+        for idx, var in enumerate(['Intercept'] + self.independent_vars):
+            if method == 'dydx':
+                # Marginal effect (change in probability)
+                effect = prob_at_values * (1 - prob_at_values) * self.coefficients[idx]
+            elif method == 'eyex':
+                # Elasticity (percentage change in probability for 1% change in variable)
+                effect = self.coefficients[idx] * x_at_values[idx] * prob_at_values * (1 - prob_at_values)
+            marginal_effects[var] = effect
+
+        return pd.DataFrame(marginal_effects, index=[0])
+
+    def _fit_coefficients(self, iterations=10, tol=1e-6):
+        x = self.independent_data
+        if self.intercept:
+            x = self._add_intercept(x)
+        y = self.dependent_data
+
+        self.coefficients = np.zeros(x.shape[1])
+        count = 0
+        for _ in range(iterations):
+            pred = x @ self.coefficients
+            predictions = _sigmoid(pred)
+            gradient = _compute_gradient(x, y, predictions)
+            hessian = _compute_hessian(x, predictions)
+
+            update = np.linalg.inv(hessian) @ gradient
+            self.coefficients += update
+            count += 1
+            if np.linalg.norm(update) < tol:
+                break
+        print(f'Converged in {count} iterations.')
 
     def _compute_normal_se(self, x):
         hessian = _compute_hessian(x, _sigmoid(x @ self.coefficients))
