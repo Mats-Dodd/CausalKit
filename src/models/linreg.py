@@ -161,6 +161,9 @@ class LinReg(LinearModel):
             robust_variance = xtx_inv @ (x.T @ s @ x) @ xtx_inv
             self.standard_errors = np.sqrt(np.diag(robust_variance))
 
+        else:
+            raise ValueError(f"Unknown standard error: {self.standard_error_type} please specify 'non-robust' or 'hc0'")
+
     def _fit_t_statistic(self):
 
         self.t_stats = self.coefficients / self.standard_errors
