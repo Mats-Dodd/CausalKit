@@ -30,6 +30,6 @@ Upcoming Features to implement:
 5. add model diagnostics + assumption checks (linearity, normality of residuals, homoscedasticity, and absence of multicollinearity. This could include plots (like QQ plots, residual vs. fitted value plots) and statistical tests.)
 6. Regularization (Lasso, Ridge, Elastic Net)
 7. add GLM's (poisson, negative binomial, multinomial)
-8. Bootstrap + resampling methods (bootstrap se ci permutation tests)
+8. Bootstrap + resampling methods (bootstrap se ci, permutation tests)
 9. add typical Causal inferenece methods interfaces (matching, regression discontinuity, synthetic control, etc.)
 10. interactive interaction explorer (interactive visualization with sliders for continuous variables and dropdowns for categorical variables)
