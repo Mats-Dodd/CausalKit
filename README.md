@@ -1,6 +1,6 @@
 # CausalKit
 
-## A Package for Causal Inference Inspired by Econometrics and modern ML API Design
+## A Package for Causal Inference inspired by econometrics and modern ML API design
 
 CausalKit is a Python package specifically designed for students and researchers. It offers a unique approach to economic and statistical analysis, emphasizing ease of use, interpretability and causation. 
 
