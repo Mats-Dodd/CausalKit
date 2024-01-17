@@ -145,11 +145,12 @@ class LogReg(LinearModel):
         marginal_effects = {}
         for idx, var in enumerate(['Intercept'] + self.independent_vars):
             if method == 'dydx':
-                # Marginal effect (change in probability)
+
                 effect = prob_at_values * (1 - prob_at_values) * self.coefficients[idx]
             elif method == 'eyex':
                 # Elasticity (percentage change in probability for 1% change in variable)
-                effect = self.coefficients[idx] * x_at_values[idx] * prob_at_values * (1 - prob_at_values)
+                """TODO"""
+                pass
             marginal_effects[var] = effect
 
         return pd.DataFrame(marginal_effects, index=[0])
@@ -255,10 +256,6 @@ class LogReg(LinearModel):
         """
         Compute the Likelihood Ratio Test (LLR) p-value.
         """
-        x = self.independent_data
-        if self.intercept:
-            x = self._add_intercept(x)
-        y = self.dependent_data
 
         log_likelihood_model = self.log_likelihood
         log_likelihood_null = self.log_likelihood_null
@@ -341,12 +338,3 @@ class LogReg(LinearModel):
         html += "</pre>"
 
         return display(HTML(html))
-
-
-
-
-
-
-
-
-

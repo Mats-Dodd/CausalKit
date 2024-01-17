@@ -1,8 +1,8 @@
 # CausalKit
 
-## A Package for Causal Inference Inspired by Econometrics
+## A Package for Causal Inference Inspired by Econometrics and modern ML API Design
 
-CausalKit is a Python package specifically designed for economics students and researchers. It offers a unique approach to regression analysis, emphasizing interpretability and causal inference, all through an econometrics lens.
+CausalKit is a Python package specifically designed for students and researchers. It offers a unique approach to economic and statistical analysis, emphasizing ease of use, interpretability and causation. 
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)
 ![Test Coverage](https://img.shields.io/badge/coverage-100-brightgreen.svg)
@@ -23,13 +23,13 @@ pip install causalkit
 
 Things to implement:
 
-1. add dropping of na values
+1. add dropping of na values automatically upon model instantiation
 4. add IV Regression use angrist data as example
 5. add t test
 7. add random effect and mixed effects models
 8. add model diagnostics + assumption checks (linearity, normality of residuals, homoscedasticity, and absence of multicollinearity. This could include plots (like QQ plots, residual vs. fitted value plots) and statistical tests.)
 9. Regularization (Lasso, Ridge, Elastic Net)
-10. add GLM's (logistic, poisson, negative binomial, multinomial)
-11. Bootstrap + resampling methods (bootstrap se ci permutation tests, )
-12. add typical Causal inferenece methods (matching, regression discontinuity, synthetic control, etc.)
-13. interactive interaction explorer (interactive vis with sliders for continuous variables and dropdowns for categorical variables)
+10. add GLM's (poisson, negative binomial, multinomial)
+11. Bootstrap + resampling methods (bootstrap se ci permutation tests)
+12. add typical Causal inferenece methods interfaces (matching, regression discontinuity, synthetic control, etc.)
+13. interactive interaction explorer (interactive visualization with sliders for continuous variables and dropdowns for categorical variables)
