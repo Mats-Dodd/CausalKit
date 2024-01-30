@@ -10,15 +10,43 @@ CausalKit is a Python package designed for students and researchers alike. It of
 ![Python Version](https://img.shields.io/badge/python-3.89+-blue.svg)
 ### Features
 
+#### Design Principles
 - **Econometrics-Driven Approach:** Our methods are rooted in econometrics principles, ensuring robust and reliable analysis.
 - **Focus on Causal Inference:** Understand the 'why' behind your data with tools designed for causal analysis.
 - **Intuitive Interface:** Designed with simplicity in mind, making it accessible for students and professionals alike.
 - **Comprehensive Documentation:** Detailed guides and examples to help you get started and make the most out of CausalKit.
 
+#### Regression
+- rgonomic API commands for linear regression, with support for fixed effects, IV, and more.
+
+  - To use all column in a dataset simply call:
+```python
+model = LinReg(df=data,
+               outcome="outcome",
+               independent=["."])
+```
+- Please see the 2__regresison_commands_walkthrough.ipynb in /notebooks for more details & functionality.
+
+
+
 ### Installation
 
 ```bash
 pip install causalkit
+```
+
+### Get Started
+
+```python
+import pandas as pd
+from src.models.linreg import LinReg
+
+data = pd.DataFrame("data.csv")
+model = LinReg(df=data,
+               outcome="outcome_col", 
+               independent=["independant_col1", "independant_col1"],
+               standard_error_type='hc0')
+model.summary(content_type='static')
 ```
 
 Upcoming Features to implement:
