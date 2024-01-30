@@ -33,3 +33,4 @@ Upcoming Features to implement:
 8. Bootstrap + resampling methods (bootstrap se ci, permutation tests)
 9. add typical Causal inferenece methods interfaces (matching, regression discontinuity, synthetic control, etc.)
 10. interactive interaction explorer (interactive visualization with sliders for continuous variables and dropdowns for categorical variables)
+11. Refactor Fixed Effects class to handle high dimensional fixed effects efficiently, add method to support within estimator
