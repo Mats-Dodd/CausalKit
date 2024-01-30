@@ -16,41 +16,6 @@ CausalKit is a Python package designed for students and researchers alike. It of
 - **Intuitive Interface:** Designed with simplicity in mind, making it accessible for students and professionals alike.
 - **Comprehensive Documentation:** Detailed guides and examples to help you get started and make the most out of CausalKit.
 
-#### Regression
-1. rgonomic API commands for linear regression, with support for fixed effects, IV, and more.
-
-  - To use all column in a dataset simply call:
-```python
-model = LinReg(df=data,
-               outcome="outcome",
-               independent=["."])
-```
-- Please see the 2__regresison_commands_walkthrough.ipynb in /notebooks for more details & functionality.
-
-2. Stargazer based regression outputs for easy comparison of models.
-
-```python
-import pandas as pd
-from src.models.linreg import LinReg
-from src.displays.display_linear import display_models
-
-data = pd.read_csv("data.csv")
-model = LinReg(df=data,
-               outcome="outcome_col", 
-               independent=["independant_col1",
-                            "independant_col2"],
-               standard_error_type='hc0')
-model_2 = LinReg(df=data,
-               outcome="outcome_col",
-               independent=["independant_col1",
-                            "independant_col2",
-                            "independant_col3"],
-               standard_error_type='hc0')
-
-```
-![Example Image](images/dispaly_models_image.png)
-  
-
 ### Installation
 
 ```bash
@@ -71,6 +36,55 @@ model = LinReg(df=data,
                standard_error_type='hc0')
 model.summary(content_type='static')
 ```
+
+#### Regression
+1. rgonomic API commands for linear regression, with support for fixed effects, IV, and more.
+
+  - To use all columns in a dataset simply call:
+```python
+import pandas as pd
+from src.models.linreg import LinReg
+
+data = pd.read_csv("data.csv")
+model = LinReg(df=data,
+               outcome="outcome",
+               independent=["."])
+```
+- Please see the 2__regression_commands_walkthrough.ipynb in /notebooks for more details & functionality.
+
+2. Stargazer based regression outputs for easy comparison of models.
+
+```python
+import pandas as pd
+from src.models.linreg import LinReg
+from src.displays.display_linear import display_models
+
+data = pd.read_csv("data.csv")
+model = LinReg(df=data,
+               outcome="outcome_col", 
+               independent=["independant_col1",
+                            "independant_col2"],
+               standard_error_type='hc0')
+
+model_2 = LinReg(df=data,
+               outcome="outcome_col",
+               independent=["independant_col1",
+                            "independant_col2",
+                            "independant_col3"],
+               standard_error_type='hc0')
+
+display_models([model, model_2])
+```
+![Example Image](images/dispaly_models_image.png)
+
+3. Interactive regression outputs to remind you what those pesky stats terms mean. Just call the .summary() method on your model object and hover over the terms to see their definitions.
+
+![Example Image](images/dynamic_output.png)
+
+
+
+
+
 
 Upcoming Features to implement:
 
