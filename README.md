@@ -17,7 +17,7 @@ CausalKit is a Python package designed for students and researchers alike. It of
 - **Comprehensive Documentation:** Detailed guides and examples to help you get started and make the most out of CausalKit.
 
 #### Regression
-- rgonomic API commands for linear regression, with support for fixed effects, IV, and more.
+1. rgonomic API commands for linear regression, with support for fixed effects, IV, and more.
 
   - To use all column in a dataset simply call:
 ```python
@@ -27,7 +27,29 @@ model = LinReg(df=data,
 ```
 - Please see the 2__regresison_commands_walkthrough.ipynb in /notebooks for more details & functionality.
 
+2. Stargazer based regression outputs for easy comparison of models.
 
+```python
+import pandas as pd
+from src.models.linreg import LinReg
+from src.displays.display_linear import display_models
+
+data = pd.read_csv("data.csv")
+model = LinReg(df=data,
+               outcome="outcome_col", 
+               independent=["independant_col1",
+                            "independant_col2"],
+               standard_error_type='hc0')
+model_2 = LinReg(df=data,
+               outcome="outcome_col",
+               independent=["independant_col1",
+                            "independant_col2",
+                            "independant_col3"],
+               standard_error_type='hc0')
+
+```
+![Example Image](images/display_models.png)
+  
 
 ### Installation
 
@@ -41,10 +63,11 @@ pip install causalkit
 import pandas as pd
 from src.models.linreg import LinReg
 
-data = pd.DataFrame("data.csv")
+data = pd.read_csv("data.csv")
 model = LinReg(df=data,
                outcome="outcome_col", 
-               independent=["independant_col1", "independant_col1"],
+               independent=["independant_col1",
+                            "independant_col2"],
                standard_error_type='hc0')
 model.summary(content_type='static')
 ```
