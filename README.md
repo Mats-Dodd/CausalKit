@@ -10,11 +10,10 @@ CausalKit is a Python package designed for students and researchers alike. It of
 ![Python Version](https://img.shields.io/badge/python-3.89+-blue.svg)
 ### Features
 
-#### Design Principles
-- **Econometrics-Driven Approach:** Our methods are rooted in econometrics principles, ensuring robust and reliable analysis.
-- **Focus on Causal Inference:** Understand the 'why' behind your data with tools designed for causal analysis.
-- **Intuitive Interface:** Designed with simplicity in mind, making it accessible for students and professionals alike.
-- **Comprehensive Documentation:** Detailed guides and examples to help you get started and make the most out of CausalKit.
+1. Simple API with r like syntax for linear regression
+2. Model display functions for easy comparison of models or interpretation of results
+3. Intuitive interfaces for common causal inference methods such as IV, panel methods and logit models. 
+4. Simple library architecture allowing custom models to be added easily which will leverage existing functionality such as model display functions and r like syntax.
 
 ### Installation
 
@@ -77,7 +76,7 @@ display_models([model, model_2])
 ```
 ![Example Image](images/dispaly_models_image.png)
 
-3. Interactive regression outputs to remind you what those pesky stats terms mean. Just call the .summary() method on your model object and hover over the terms to see their definitions.
+3. Interactive regression outputs to remind you what a stats term means. Just call the .summary() method on your model object and hover over the terms to see their definitions.
 
 ![Example Image](images/dynamic_output.png)
 
@@ -86,16 +85,16 @@ display_models([model, model_2])
 
 
 
-Upcoming Features to implement:
+### Upcoming Features:
 
-1. add dropping of na values automatically upon model instantiation
-2. add IV Regression use angrist data as example
-3. add t test
-4. add random effect and mixed effects models
-5. add model diagnostics + assumption checks (linearity, normality of residuals, homoscedasticity, and absence of multicollinearity. This could include plots (like QQ plots, residual vs. fitted value plots) and statistical tests.)
+1. Dropping of na values automatically upon model instantiation
+2. IV Regression with angrist data as example
+3. T test for difference in means
+4. Random effect and mixed effects models
+5. Common model diagnostics + assumption checks (linearity, normality of residuals, homoscedasticity, and absence of multicollinearity. This could include plots (like QQ plots, residual vs. fitted value plots) and statistical tests.)
 6. Regularization (Lasso, Ridge, Elastic Net)
-7. add GLM's (poisson, negative binomial, multinomial)
+7. GLM's (poisson, negative binomial, multinomial)
 8. Bootstrap + resampling methods (bootstrap se ci, permutation tests)
-9. add typical Causal inferenece methods interfaces (matching, regression discontinuity, synthetic control, etc.)
-10. interactive interaction explorer (interactive visualization with sliders for continuous variables and dropdowns for categorical variables)
-11. Refactor Fixed Effects class to handle high dimensional fixed effects efficiently, add method to support within estimator
+9. build more Causal inferenece methods interfaces (matching, regression discontinuity, synthetic control, etc.)
+10. Interactive interaction explorer (interactive visualization with sliders for continuous variables and dropdowns for categorical variables)
+11. Refactor Fixed Effects class to handle high dimensional fixed effects efficiently, add method to support within estimator, integrate tabmat library for efficient matrix operations.

@@ -19,13 +19,6 @@ class LinReg(LinearModel):
 
         """
         Initialize the LinReg model.
-
-        Parameters:
-        df (pd.DataFrame): The dataframe containing the data.
-        outcome (str): The name of the outcome column.
-        independent (list): A list of names of independent variables.
-        intercept (bool): Whether to include an intercept in the model.
-        standard_error_type (str): The type of standard error calculation.
         """
 
         self.standard_error_type = standard_error_type

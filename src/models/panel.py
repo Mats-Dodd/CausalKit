@@ -20,15 +20,8 @@ class FixedEffects(LinReg):
                  standard_error_type='non-robust'):
         """
 
-        Initialize the FixedEffectsModel.
+        Initialize the Fixed Effects Model.
 
-        Parameters:
-        df (pd.DataFrame): The dataframe containing the data.
-        outcome (str): The name of the outcome column.
-        independent (list): A list of names of independent variables.
-        fixed (list): A list of column names for which to include fixed effects.
-        intercept (bool): Whether to include an intercept in the model.
-        standard_error_type (str): The type of standard error calculation.
         """
         self.fixed_vars = fixed
         self.model_type = 'Fixed Effects'

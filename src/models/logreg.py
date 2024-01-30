@@ -13,10 +13,6 @@ def _sigmoid(z):
 def _compute_gradient(x, y, predictions):
     """
     Compute the gradient of the log-likelihood.
-    :param x:
-    :param y:
-    :param predictions:
-    :return: gradient of the log-likelihood
     """
     return x.T @ (y - predictions)
 
@@ -24,9 +20,6 @@ def _compute_gradient(x, y, predictions):
 def _compute_hessian(x, predictions):
     """
     Compute the Hessian of the log-likelihood.
-    :param x:
-    :param predictions:
-    :return: hessian
     """
 
     w = np.diag(predictions * (1 - predictions))
@@ -37,9 +30,6 @@ def _compute_hessian(x, predictions):
 def _compute_log_likelihood(y, predictions):
     """
     Compute the log-likelihood.
-    :param y:
-    :param predictions:
-    :return: log-likelihood
     """
     return np.sum(y * np.log(predictions) + (1 - y) * np.log(1 - predictions))
 
@@ -120,10 +110,6 @@ class LogReg(LinearModel):
     def marginal_effects(self, at='mean', method='dydx'):
         """
         Compute marginal effects for logistic regression.
-
-        :param at: Specify whether to evaluate at 'mean' or 'median' of independent variables.
-        :param method: Specify the method to use, 'dydx' for marginal effect, 'eyex' for elasticity.
-        :return: DataFrame with marginal effects for each independent variable.
         """
         if at not in ['mean', 'median']:
             raise ValueError("The 'at' parameter must be 'mean' or 'median'")
@@ -135,20 +121,16 @@ class LogReg(LinearModel):
         if self.intercept:
             x = self._add_intercept(x)
 
-        # Getting the mean or median values of the independent variables
         x_at_values = np.mean(x, axis=0) if at == 'mean' else np.median(x, axis=0)
 
-        # Predict probabilities at specified values
         prob_at_values = _sigmoid(x_at_values @ self.coefficients)
 
-        # Calculate marginal effects
         marginal_effects = {}
         for idx, var in enumerate(['Intercept'] + self.independent_vars):
             if method == 'dydx':
 
                 effect = prob_at_values * (1 - prob_at_values) * self.coefficients[idx]
             elif method == 'eyex':
-                # Elasticity (percentage change in probability for 1% change in variable)
                 """TODO"""
                 pass
             marginal_effects[var] = effect

@@ -20,14 +20,6 @@ class IV(LinReg):
                  standard_error_type='non-robust'):
         """
         Initialize the Instrumental Variables model.
-
-        Parameters:
-        df (pd.DataFrame): The dataframe containing the data.
-        outcome (str): The name of the outcome column.
-        independent (list): A list of names of independent variables.
-        instruments (list): A list of names of instrumental variables.
-        intercept (bool): Whether to include an intercept in the model.
-        standard_error_type (str): The type of standard error calculation.
         """
         self.independent_var = independent
         self.controls = controls
