@@ -48,7 +48,7 @@ model_2 = LinReg(df=data,
                standard_error_type='hc0')
 
 ```
-![Example Image](images/display_models.png)
+![Example Image](images/dispaly_models_image.png)
   
 
 ### Installation
